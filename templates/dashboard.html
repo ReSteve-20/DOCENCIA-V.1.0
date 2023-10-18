@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INICIO</title>
+
+    <!-- Enlaces a los archivos CSS de Bootstrap desde tu carpeta static -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+
+    <!-- Agrega otros estilos personalizados si los tienes -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+
+    <style>
+        body {
+            background: linear-gradient(to bottom, #1ca0f8, #fc91cf);
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        h1 {
+            font-size: 36px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .form-container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .form-label {
+            font-size: 18px;
+            color: #333;
+        }
+
+        /* Estilo para inputs tipo línea */
+        .form-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: none;
+            border-bottom: 1px solid #ccc;
+            /* Línea inferior en lugar de borde */
+            border-radius: 0;
+            /* Eliminar el radio de borde */
+            background-color: transparent;
+            /* Fondo transparente */
+        }
+
+        /* Estilo para inputs tipo línea en estado de foco (cuando se seleccionan) */
+        .form-input:focus {
+            outline: none;
+            border-bottom: 2px solid #007bff;
+            /* Línea inferior resaltada en color */
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+            padding: auto;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+
+        .login-options {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .login-options a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        /* Estilo para el contenedor de los subcontenedores */
+        .subcontainer-wrapper {
+            display: flex;
+            justify-content: space-between;
+            /* Espacio igual entre los subcontenedores */
+            flex-wrap: wrap;
+            /* Para que los subcontenedores se ajusten si la pantalla es estrecha */
+            max-width: 900px;
+            /* Ancho máximo para evitar que se extiendan demasiado */
+            margin: 0 auto;
+        }
+
+        /* Estilo para subcontenedores blancos */
+        .subcontainer {
+            flex-basis: calc(33.33% - 20px);
+            /* 33.33% de ancho menos el espacio entre ellos */
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .subcontainer h2 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .subcontainer p {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .nav-custom-radius {
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark nav-custom-radius">
+        <div class="container-fluid">
+            <!-- Nombre o logo -->
+            <a class="navbar-brand" href="{{ url_for('dashboard') }}">Inicio</a>
+
+            <!-- Botón de menú hamburguesa (para vistas móviles) -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown"
+                aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Contenido de la barra de navegación -->
+            <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <!-- Combobox con opciones de administrador -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            Opciones de Administrador
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                            <!-- Opciones del combobox. Puedes agregar o quitar según tus necesidades -->
+                            <li><a class="dropdown-item" href="{{ url_for('register') }}">Registrar Docente</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('add_year') }}">Añadir año.</a></li>
+
+                        </ul>
+                    </li>
+                </ul>
+
+                <!-- Botón de cerrar sesión al final -->
+                <a href="{{ url_for('logout') }}" class="btn btn-danger">Cerrar sesión</a>
+            </div>
+        </div>
+    </nav>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="container mt-3">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+    <div class="container">
+        <h1>¡Bienvenido!</h1>
+        <p>¿Qué quieres hacer hoy?</p>
+
+        <!-- Contenedor de los subcontenedores -->
+        <div class="subcontainer-wrapper">
+            <!-- Subcontenedor 1 -->
+            <div class="subcontainer">
+                <h2>Cohortes</h2>
+                <p>Aquí podrás gestionar tus cohortes y agrupar a todos tus estudiantes. Luego de crear
+                    un cohorte podrás asignar a tus estudiantes a el mismo. :)</p>
+
+                <a href="{{ url_for('add_cohort') }}">Crear un corte</a>
+
+
+            </div>
+
+            <!-- Subcontenedor 2 -->
+            <div class="subcontainer">
+                <h2>Estudiantes</h2>
+                <p>Asigna tus estudiantes a tus cohortes, manten la
+                    organización entre los alumnos a tu cargo. :)
+                </p>
+                <a href="{{ url_for('add_student') }}">Registrar Estudiantes</a>
+            </div>
+
+            <!-- Subcontenedor 3 -->
+            <div class="subcontainer">
+                <h2>Calificaciones</h2>
+                <p>Registra las Calificaciones de cada uno de tus estudiantes.
+                    Luego podrás generar un reporte con las Calificaciones de todos
+                    para compartirlas con tu clase. :)
+                </p>
+                <a href="{{ url_for('view_students') }}">Mis estudiantes</a>
+            </div>
+        </div>
+
+        <!-- Puedes agregar contenido adicional aquí -->
+    </div>
+
+    <!-- Enlaces a los archivos JavaScript de Bootstrap desde tu carpeta static -->
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</body>
+
+</html>

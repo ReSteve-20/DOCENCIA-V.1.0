@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AÑOS</title>
+
+    <!-- Enlaces a los archivos CSS de Bootstrap desde tu carpeta static -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+
+    <style>
+        body {
+            background: linear-gradient(to bottom, #1ca0f8, #fc91cf);
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        .form-container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .form-label {
+            font-size: 18px;
+            color: #333;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: none;
+            border-bottom: 1px solid #ccc;
+            border-radius: 0;
+            background-color: transparent;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-bottom: 2px solid #007bff;
+        }
+
+        .nav-custom-radius {
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark nav-custom-radius">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('dashboard') }}">Inicio</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown"
+                aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            Opciones de Administrador
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                            <li><a class="dropdown-item" href="{{ url_for('register') }}">Registrar Docente</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('add_year') }}">Activar año</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                <a href="{{ url_for('logout') }}" class="btn btn-danger">Cerrar sesión</a>
+            </div>
+        </div>
+    </nav>
+<br>
+    <div class="container form-container">
+        <h2>Activar año</h2>
+        <form action="{{ url_for('add_year') }}" method="post">
+            <label class="form-label" for="name">Añadir un año habilitará el mismo a todos los docentes</label>
+            <input class="form-input" type="number" min="2022" max="3000" name="name" required>
+
+            <input class="btn btn-primary" type="submit" value="Activar">
+        </form>
+        <a href="{{ url_for('dashboard') }}">Volver al Panel</a>
+    </div>
+
+    <!-- Enlaces a los archivos JavaScript de Bootstrap desde tu carpeta static -->
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</body>
+
+</html>
