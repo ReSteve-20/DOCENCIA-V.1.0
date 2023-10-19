@@ -113,13 +113,15 @@ class Year(BaseModel):
     def __repr__(self):
         return f"<Year {self.name}>"
 
+
 class Universidad(BaseModel):
     __tablename__ = "universidad"
-    
+
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(255), nullable=False, unique=True)
-    
+
     students = db.relationship("Student", back_populates="universidad")
+
 
 class Cohort(BaseModel):
     __tablename__ = "cohort"
@@ -154,8 +156,10 @@ class Student(BaseModel):
     telefono = db.Column(db.String(20), nullable=True)  # New field
     direccion_residencia = db.Column(db.String(255), nullable=True)  # New field
 
-    universidad_id = db.Column(db.Integer, db.ForeignKey("universidad.id"), nullable=True)
-    
+    universidad_id = db.Column(
+        db.Integer, db.ForeignKey("universidad.id"), nullable=True
+    )
+
     universidad = db.relationship("Universidad", back_populates="students")
 
     # Foreign Keys
@@ -226,6 +230,7 @@ def login():
 def dashboard():
     return render_template("dashboard.html", user=current_user)
 
+
 @app.route("/add_universidad", methods=["GET", "POST"])
 @admin_required
 @login_required
@@ -236,13 +241,14 @@ def add_universidad():
         if existing_universidad:
             flash("Esta universidad ya existe!", "danger")
         else:
-            new_universidad = Universidad(nombre=nombre, created_by=current_user.full_name)  # Utiliza el campo creado en BaseModel)
+            new_universidad = Universidad(
+                nombre=nombre, created_by=current_user.full_name
+            )  # Utiliza el campo creado en BaseModel)
             db.session.add(new_universidad)
             db.session.commit()
             flash("Universidad agregada con éxito!", "success")
             return redirect(url_for("dashboard"))
     return render_template("add_universidad.html")
-
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -409,7 +415,9 @@ def add_student():
     universidades = Universidad.query.all()
     # Obtiene los cohortes creados por el docente actual
     cohorts = Cohort.query.filter_by(teacher_id=current_user.id).all()
-    return render_template("add_student.html", cohorts=cohorts, universidades=universidades)
+    return render_template(
+        "add_student.html", cohorts=cohorts, universidades=universidades
+    )
 
 
 @app.route("/view_students", methods=["GET", "POST"])
@@ -517,10 +525,12 @@ def verify_password():
 
 
 @app.route(
-    "/generate_report/<int:teacher_id>/<int:year_id>/<int:cohort_id>", methods=["GET"]
+    "/generate_report/<int:teacher_id>/<int:year_id>/<int:cohort_id>", methods=["POST"]
 )
 @login_required
 def generate_report(teacher_id, year_id, cohort_id):
+    especificar_parametros = request.form.get("especificar_parametros")
+    parametros = request.form.get("parametros")
     # Recupera la información necesaria de la base de datos
     teacher = User.query.get(teacher_id)
     year = Year.query.get(year_id)
@@ -555,6 +565,10 @@ def generate_report(teacher_id, year_id, cohort_id):
         grade = Grade.query.filter_by(student_id=student.id).first()
         final_grade = round(grade.final_grade, 2) if grade else "N/A"
         data.append([student.identification, student.full_name, final_grade])
+    if especificar_parametros == "si" and parametros:
+        content.append(Paragraph("Parámetros Evaluados:", title_style))
+        content.append(Paragraph(parametros, normal_style))
+        content.append(Spacer(1, 12))
 
     table = Table(data)
     table_style = TableStyle(
@@ -636,9 +650,9 @@ def create_db():
             full_name="Admin Steve",
             password=generate_password_hash("RgD0c3ncia16@", method="sha256"),
             email="resistsaw@gmail.com",
-            sexo = "MASCULINO",
-            telefono = "3006009000",
-            direccion_residencia = "Street 22h",
+            sexo="MASCULINO",
+            telefono="3006009000",
+            direccion_residencia="Street 22h",
             profile=admin_profile,
         )
         db.session.add(new_admin)

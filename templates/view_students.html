@@ -101,7 +101,8 @@
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                             <li><a class="dropdown-item" href="{{ url_for('register') }}">Registrar Docente</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('add_year') }}">Añadir año</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('add_universidad') }}">Añadir universidad</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('add_universidad') }}">Añadir universidad</a>
+                            </li>
                         </ul>
                     </li>
                 </ul>
@@ -142,9 +143,26 @@
         {% if selected_cohort %}
         <!-- Botón para generar el informe -->
         <div class="generate-report mb-3">
-            <a href="{{ url_for('generate_report', teacher_id=current_user.id, year_id=selected_cohort.year_id, cohort_id=selected_cohort.id) }}"
-                class="btn btn-custom">
-                Generar Informe
+            <!-- Pregunta al docente sobre los parámetros evaluados -->
+            <form
+                action="{{ url_for('generate_report', teacher_id=current_user.id, year_id=selected_cohort.year_id, cohort_id=selected_cohort.id) }}"
+                method="post">
+                <div class="mb-3">
+                    <label>¿Desea especificar los parámetros evaluados para la nota del estudiante?</label>
+                    <input type="radio" name="especificar_parametros" value="si"
+                        onclick="document.getElementById('parametros_div').style.display = 'block';"> Sí
+                    <input type="radio" name="especificar_parametros" value="no"
+                        onclick="document.getElementById('parametros_div').style.display = 'none';"> No
+                </div>
+                <div id="parametros_div" style="display: none;">
+                    <label>Especifique los parámetros:</label>
+                    <textarea name="parametros" class="form-control"></textarea>
+                </div>
+                <div class="generate-report mb-3">
+                    <button type="submit" class="btn btn-custom">Generar Informe</button>
+                </div>
+            </form>
+
             </a>
         </div>
 
@@ -188,7 +206,7 @@
         {% endif %}
         <a href="{{ url_for('dashboard') }}">Atrás</a>
     </div>
-    
+
     <!-- Enlaces a los archivos JavaScript de Bootstrap -->
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
 </body>
