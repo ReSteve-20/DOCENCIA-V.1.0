@@ -146,7 +146,7 @@
                 Generar Informe
             </a>
         </div>
-    
+
         <!-- Tabla de estudiantes -->
         <table class="table">
             <thead>
@@ -171,10 +171,12 @@
                     </td>
                     <td>
                         <!-- Botones de acción -->
-                        <a href="{{ url_for('add_grade', student_id=student.id) }}" class="btn btn-success btn-sm">Añadir
+                        <a href="{{ url_for('add_grade', student_id=student.id) }}"
+                            class="btn btn-success btn-sm">Añadir
                             notas</a>
                         |
-                        <a href="{{ url_for('edit_grade', student_id=student.id) }}" class="btn btn-warning btn-sm">Editar
+                        <a href="{{ url_for('edit_grade', student_id=student.id) }}"
+                            class="btn btn-warning btn-sm">Editar
                             notas</a>
                     </td>
                 </tr>
@@ -182,9 +184,10 @@
             </tbody>
         </table>
         <br>
-    {% endif %}
+        {% endif %}
+        <a href="{{ url_for('dashboard') }}">Atrás</a>
     </div>
-
+    
     <!-- Enlaces a los archivos JavaScript de Bootstrap -->
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
 </body>

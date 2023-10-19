@@ -7,7 +7,8 @@ from flask import (
     flash,
     session,
     abort,
-    jsonify, make_response
+    jsonify,
+    make_response,
 )
 from flask_sqlalchemy import SQLAlchemy
 from flask import render_template, request, redirect, url_for
@@ -16,7 +17,14 @@ from flask_migrate import Migrate
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
 from sqlalchemy import event
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_login import (
+    LoginManager,
+    UserMixin,
+    login_user,
+    login_required,
+    logout_user,
+    current_user,
+)
 from functools import wraps
 import pytz
 from reportlab.lib.pagesizes import letter, landscape
@@ -26,8 +34,9 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
 from io import BytesIO
 
+
 def current_time_in_bogota():
-    local_tz = pytz.timezone('America/Bogota')
+    local_tz = pytz.timezone("America/Bogota")
     return datetime.now(local_tz)
 
 
@@ -38,15 +47,18 @@ app.config[
 db = SQLAlchemy(app)
 app.config["SECRET_KEY"] = "RgD0c3ncia16@"
 login_manager = LoginManager()
-login_manager.login_view = 'login'
+login_manager.login_view = "login"
 login_manager.init_app(app)
 migrate = Migrate(app, db)
 
+
 class BaseModel(db.Model):
-    __abstract__ = True  
-    
+    __abstract__ = True
+
     created_at = db.Column(db.DateTime, default=current_time_in_bogota)
-    updated_at = db.Column(db.DateTime, default=current_time_in_bogota, onupdate=current_time_in_bogota)
+    updated_at = db.Column(
+        db.DateTime, default=current_time_in_bogota, onupdate=current_time_in_bogota
+    )
     created_by = db.Column(db.String(50), nullable=True)
     modified_by = db.Column(db.String(50), nullable=True)
 
@@ -68,15 +80,16 @@ class User(BaseModel, UserMixin):
 
     id = db.Column(db.Integer, primary_key=True)
     identificacion = db.Column(db.Integer, nullable=False, unique=True)
+    tipo_identificacion = db.Column(db.String(2), nullable=False)  # Nuevo campo
     full_name = db.Column(db.String(50), nullable=False)
     password = db.Column(db.String(255), nullable=False)
     email = db.Column(db.String(100), nullable=False, unique=True)
-    
 
     profile_id = db.Column(db.Integer, db.ForeignKey("profile.id"), nullable=False)
 
     cohorts = db.relationship("Cohort", back_populates="teacher")
     profile = db.relationship("Profile", back_populates="users")
+
     @property
     def is_admin(self):
         return self.profile.type.lower() == "admin"
@@ -125,6 +138,7 @@ class Student(BaseModel):
 
     id = db.Column(db.Integer, primary_key=True)
     identification = db.Column(db.String(20), nullable=False, unique=True)
+    tipo_identificacion = db.Column(db.String(2), nullable=False)  # Nuevo campo
     full_name = db.Column(db.String(50), nullable=False)
 
     # Foreign Keys
@@ -157,10 +171,12 @@ class Grade(BaseModel):
 
     def __repr__(self):
         return f"<Grade {self.id} for Student {self.student_id}>"
-    
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
 
 def admin_required(f):
     @wraps(f)
@@ -168,43 +184,55 @@ def admin_required(f):
         if current_user.is_admin:
             return f(*args, **kwargs)
         else:
-            flash("Solo los administradores pueden usar esta función", 'danger')
-            return redirect(url_for('dashboard'))
+            flash("Solo los administradores pueden usar esta función", "danger")
+            return redirect(url_for("dashboard"))
+
     return wrap
 
-@app.route('/', methods=['GET', 'POST'])
+
+@app.route("/", methods=["GET", "POST"])
 def login():
-    if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
+    if request.method == "POST":
+        email = request.form.get("email")
+        password = request.form.get("password")
         user = User.query.filter_by(email=email).first()
         if user and check_password_hash(user.password, password):
             login_user(user)
-            return redirect(url_for('dashboard'))
+            return redirect(url_for("dashboard"))
         else:
-            flash('Usuario o contraseña incorrectos', 'danger')
-    return render_template('login.html')
+            flash("Usuario o contraseña incorrectos", "danger")
+    return render_template("login.html")
 
-@app.route('/dashboard')
+
+@app.route("/dashboard")
 @login_required
 def dashboard():
-    return render_template('dashboard.html')
+    return render_template("dashboard.html", user=current_user)
 
 
-@app.route('/register', methods=['GET', 'POST'])
+@app.route("/register", methods=["GET", "POST"])
 @admin_required
 @login_required
 def register():
-    if request.method == 'POST':
-        identificacion = request.form.get('identificacion')
-        full_name = request.form.get('full_name')
-        email = request.form.get('email')
-        password = request.form.get('password')
-        profile_type = request.form.get('profile_type')
+    if request.method == "POST":
+        tipo_identificacion = request.form.get("tipo_identificacion")  # Nuevo campo
+        identificacion = request.form.get("identificacion")
+        full_name = request.form.get("full_name").upper()
+        email = request.form.get("email")
+        password = request.form.get("password")
+        profile_type = request.form.get("profile_type")
+
+        # Verificación adicional para el nuevo campo
+        if tipo_identificacion not in ["CC", "TI", "CE", "PA"]:
+            flash("Tipo de identificación no válido.", "danger")
+            return render_template("register.html")
 
         # Verifica si el perfil especificado es "admin" o "normal"
-        if profile_type.lower() not in ['admin', 'normal']:
-            flash('Tipo de perfil no válido. por favor defina si su docente es "administrador" o "normal".', 'danger')
+        if profile_type.lower() not in ["admin", "normal"]:
+            flash(
+                'Tipo de perfil no válido. por favor defina si su docente es "administrador" o "normal".',
+                "danger",
+            )
         else:
             # Obtén el perfil correspondiente desde la base de datos
             profile = Profile.query.filter_by(type=profile_type).first()
@@ -212,96 +240,134 @@ def register():
             if profile:
                 # Crea un nuevo usuario y asigna el perfil y el creador
                 new_user = User(
+                    tipo_identificacion=tipo_identificacion,
                     identificacion=identificacion,
                     full_name=full_name,
-                    password=generate_password_hash(password, method='sha256'),
+                    password=generate_password_hash(password, method="sha256"),
                     email=email,
                     profile=profile,
-                    created_by=current_user.full_name  # Utiliza el campo creado en BaseModel
+                    created_by=current_user.full_name,  # Utiliza el campo creado en BaseModel
                 )
                 db.session.add(new_user)
                 db.session.commit()
-                flash('User registration successful.', 'success')
-                return redirect(url_for('dashboard'))
+                flash("User registration successful.", "success")
+                return redirect(url_for("dashboard"))
             else:
-                flash('Profile not found. Please choose a valid profile type.', 'danger')
+                flash(
+                    "Profile not found. Please choose a valid profile type.", "danger"
+                )
 
-    return render_template('register.html')
+    return render_template("register.html")
 
-@app.route('/add_year', methods=['GET', 'POST'])
+
+@app.route("/add_year", methods=["GET", "POST"])
 @login_required
 @admin_required
 def add_year():
-    if request.method == 'POST':
-        name = request.form.get('name')
+    if request.method == "POST":
+        name = request.form.get("name")
         teacher_id = current_user.id
 
         # Comprobar si el año ya existe
         existing_year = Year.query.filter_by(name=name).first()
         if existing_year:
-            flash('Este año ya existe!', 'danger')
+            flash("Este año ya existe!", "danger")
         else:
-            new_year = Year(name=name, teacher_id=teacher_id, created_by=current_user.full_name)
+            new_year = Year(
+                name=name, teacher_id=teacher_id, created_by=current_user.full_name
+            )
             db.session.add(new_year)
             db.session.commit()
-            flash('Año creado con exito!', 'success')
-            return redirect(url_for('dashboard'))
+            flash("Año creado con exito!", "success")
+            return redirect(url_for("dashboard"))
 
-    return render_template('add_year.html')
+    return render_template("add_year.html")
 
-@app.route('/add_cohort', methods=['GET', 'POST'])
+
+@app.route("/add_cohort", methods=["GET", "POST"])
 @login_required
 @login_required
 def add_cohort():
-    if request.method == 'POST':
-        name = request.form.get('name')
-        year_id = request.form.get('year_id')
+    if request.method == "POST":
+        name = request.form.get("name")
+        year_id = request.form.get("year_id")
         teacher_id = current_user.id
 
         # Comprobar si el cohort ya existe para este docente en particular
-        existing_cohort = Cohort.query.filter_by(name=name, year_id=year_id, teacher_id=teacher_id).first()
+        existing_cohort = Cohort.query.filter_by(
+            name=name, year_id=year_id, teacher_id=teacher_id
+        ).first()
         if existing_cohort:
-            flash('Ya tienes un cohorte con este nombre!.', 'danger')
+            flash("Ya tienes un cohorte con este nombre!.", "danger")
         else:
-            new_cohort = Cohort(name=name, year_id=year_id, teacher_id=teacher_id, created_by=current_user.full_name)
+            new_cohort = Cohort(
+                name=name,
+                year_id=year_id,
+                teacher_id=teacher_id,
+                created_by=current_user.full_name,
+            )
             db.session.add(new_cohort)
             db.session.commit()
-            flash('Cohorte añadido correctamente!.', 'success')
-            return redirect(url_for('dashboard'))
+            flash("Cohorte añadido correctamente!.", "success")
+            return redirect(url_for("dashboard"))
 
-    years = Year.query.all()  # Lista de años para que el usuario elija al crear un cohort
-    return render_template('add_cohort.html', years=years)
+    years = (
+        Year.query.all()
+    )  # Lista de años para que el usuario elija al crear un cohort
+    return render_template("add_cohort.html", years=years)
 
 
-
-@app.route('/add_student', methods=['GET', 'POST'])
+@app.route("/add_student", methods=["GET", "POST"])
 @login_required
 def add_student():
-    if request.method == 'POST':
-        identification = request.form.get('identification')
-        full_name = request.form.get('full_name')
-        cohort_id = request.form.get('cohort_id')
+    if request.method == "POST":
+        identification = request.form.get("identification")
+        tipo_identificacion = request.form.get("tipo_identificacion")  # Nuevo campo
+        full_name = request.form.get("full_name").upper()
+        cohort_id = request.form.get("cohort_id")
+
+        # Verifica si el número de identificación coincide con el del docente en sesión
+        if identification == str(current_user.identificacion):
+            flash(
+                "No puedes registrarte como estudiante en tus propias cohortes.",
+                "danger",
+            )
+            return redirect(url_for("dashboard"))
+
+        # Verificación adicional para el nuevo campo
+        if tipo_identificacion not in ["CC", "TI", "CE", "PA"]:
+            flash("Tipo de identificación no válido.", "danger")
+            return render_template("add_student.html", cohorts=cohorts)
 
         # Verifica si el estudiante ya está inscrito en el cohorte especificado
-        existing_student = Student.query.filter_by(identification=identification, cohort_id=cohort_id).first()
+        existing_student = Student.query.filter_by(
+            identification=identification, cohort_id=cohort_id
+        ).first()
         if existing_student:
-            flash('El estudiante ya existe en este cohorte!!', 'danger')
+            flash("El estudiante ya existe en este cohorte!!", "danger")
         else:
-            new_student = Student(identification=identification, full_name=full_name, cohort_id=cohort_id, created_by=current_user.full_name)
+            new_student = Student(
+                tipo_identificacion=tipo_identificacion,
+                identification=identification,
+                full_name=full_name,
+                cohort_id=cohort_id,
+                created_by=current_user.full_name,
+            )
             db.session.add(new_student)
             db.session.commit()
-            flash('Estudiante añadido con exito!', 'success')
-            return redirect(url_for('dashboard'))
+            flash("Estudiante añadido con exito!", "success")
+            return redirect(url_for("dashboard"))
 
     # Obtiene los cohortes creados por el docente actual
     cohorts = Cohort.query.filter_by(teacher_id=current_user.id).all()
-    return render_template('add_student.html', cohorts=cohorts)
+    return render_template("add_student.html", cohorts=cohorts)
 
-@app.route('/view_students', methods=['GET', 'POST'])
+
+@app.route("/view_students", methods=["GET", "POST"])
 @login_required
 def view_students():
-    if request.method == 'POST':
-        cohort_id = request.form.get('cohort_id')
+    if request.method == "POST":
+        cohort_id = request.form.get("cohort_id")
         students = Student.query.filter_by(cohort_id=cohort_id).all()
         selected_cohort = Cohort.query.get(cohort_id)
     else:
@@ -311,28 +377,34 @@ def view_students():
     # Obtener todos los cohortes y años creados por el docente actual
     cohorts = Cohort.query.filter_by(teacher_id=current_user.id).all()
 
-    return render_template('view_students.html', cohorts=cohorts, students=students, selected_cohort=selected_cohort)
+    return render_template(
+        "view_students.html",
+        cohorts=cohorts,
+        students=students,
+        selected_cohort=selected_cohort,
+    )
 
-@app.route('/add_grade/<int:student_id>', methods=['GET', 'POST'])
+
+@app.route("/add_grade/<int:student_id>", methods=["GET", "POST"])
 @login_required
 def add_grade(student_id):
     student = Student.query.get(student_id)
     if not student:
-        flash('Estudiante no encontrado!.', 'danger')
-        return redirect(url_for('view_students'))
+        flash("Estudiante no encontrado!.", "danger")
+        return redirect(url_for("view_students"))
 
     grade_entry = Grade.query.filter_by(student_id=student_id).first()
 
     # Si ya existe una entrada de notas para este estudiante, redirigir a la página de edición.
     if grade_entry:
-        return redirect(url_for('edit_grade', student_id=student_id))
+        return redirect(url_for("edit_grade", student_id=student_id))
 
-    if request.method == 'POST':
+    if request.method == "POST":
         try:
-            teacher_grade = float(request.form.get('teacher_grade'))
-            self_evaluation = float(request.form.get('self_evaluation'))
-            group_grade = float(request.form.get('group_grade'))
-            
+            teacher_grade = float(request.form.get("teacher_grade"))
+            self_evaluation = float(request.form.get("self_evaluation"))
+            group_grade = float(request.form.get("group_grade"))
+
             final_grade = (teacher_grade + self_evaluation + group_grade) / 3
             grade = Grade(
                 teacher_grade=teacher_grade,
@@ -340,36 +412,37 @@ def add_grade(student_id):
                 group_grade=group_grade,
                 final_grade=final_grade,
                 student_id=student_id,
-                created_by=current_user.full_name
+                created_by=current_user.full_name,
             )
             db.session.add(grade)
             db.session.commit()
-            flash('Calificaciones añadidas con exito!.', 'success')
-            return redirect(url_for('view_students'))
+            flash("Calificaciones añadidas con exito!.", "success")
+            return redirect(url_for("view_students"))
         except ValueError:
-            flash('Notas inválidas!.', 'danger')
+            flash("Notas inválidas!.", "danger")
 
-    return render_template('add_grade.html', student=student)
+    return render_template("add_grade.html", student=student)
 
-@app.route('/edit_grade/<int:student_id>', methods=['GET', 'POST'])
+
+@app.route("/edit_grade/<int:student_id>", methods=["GET", "POST"])
 @login_required
 def edit_grade(student_id):
     student = Student.query.get(student_id)
     if not student:
-        flash('Estudiante no encontrado!.', 'danger')
-        return redirect(url_for('view_students'))
+        flash("Estudiante no encontrado!.", "danger")
+        return redirect(url_for("view_students"))
 
     grade_entry = Grade.query.filter_by(student_id=student_id).first()
     if not grade_entry:
-        flash('No hay calificaciones para editar a este estudiante!.', 'danger')
-        return redirect(url_for('view_students'))
+        flash("No hay calificaciones para editar a este estudiante!.", "danger")
+        return redirect(url_for("view_students"))
 
-    if request.method == 'POST':
+    if request.method == "POST":
         try:
-            teacher_grade = float(request.form.get('teacher_grade'))
-            self_evaluation = float(request.form.get('self_evaluation'))
-            group_grade = float(request.form.get('group_grade'))
-            
+            teacher_grade = float(request.form.get("teacher_grade"))
+            self_evaluation = float(request.form.get("self_evaluation"))
+            group_grade = float(request.form.get("group_grade"))
+
             final_grade = (teacher_grade + self_evaluation + group_grade) / 3
             grade_entry.teacher_grade = teacher_grade
             grade_entry.self_evaluation = self_evaluation
@@ -377,23 +450,26 @@ def edit_grade(student_id):
             grade_entry.final_grade = final_grade
             grade_entry.modified_by = current_user.full_name
             db.session.commit()
-            flash('Edición exitosa!.', 'success')
-            return redirect(url_for('view_students'))
+            flash("Edición exitosa!.", "success")
+            return redirect(url_for("view_students"))
         except ValueError:
-            flash('Notas inválidas!.', 'danger')
+            flash("Notas inválidas!.", "danger")
 
-    return render_template('edit_grade.html', student=student, grade=grade_entry)
+    return render_template("edit_grade.html", student=student, grade=grade_entry)
 
-@app.route('/verify_password', methods=['POST'])
+
+@app.route("/verify_password", methods=["POST"])
 @login_required
 def verify_password():
-    password = request.json.get('password')
+    password = request.json.get("password")
     if current_user and check_password_hash(current_user.password, password):
         return jsonify(valid=True)
     return jsonify(valid=False)
 
 
-@app.route("/generate_report/<int:teacher_id>/<int:year_id>/<int:cohort_id>", methods=["GET"])
+@app.route(
+    "/generate_report/<int:teacher_id>/<int:year_id>/<int:cohort_id>", methods=["GET"]
+)
 @login_required
 def generate_report(teacher_id, year_id, cohort_id):
     # Recupera la información necesaria de la base de datos
@@ -410,9 +486,11 @@ def generate_report(teacher_id, year_id, cohort_id):
 
     # Configura estilos
     styles = getSampleStyleSheet()
-    title_style = ParagraphStyle('Title', parent=styles['Heading1'], alignment=1)
-    normal_style = styles['Normal']
-    note_style = ParagraphStyle('Note', parent=styles['Italic'], textColor=colors.red, fontSize=10)
+    title_style = ParagraphStyle("Title", parent=styles["Heading1"], alignment=1)
+    normal_style = styles["Normal"]
+    note_style = ParagraphStyle(
+        "Note", parent=styles["Italic"], textColor=colors.red, fontSize=10
+    )
 
     # Genera el contenido
     content = []
@@ -430,16 +508,18 @@ def generate_report(teacher_id, year_id, cohort_id):
         data.append([student.identification, student.full_name, final_grade])
 
     table = Table(data)
-    table_style = TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.skyblue),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 14),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black)
-    ])
+    table_style = TableStyle(
+        [
+            ("BACKGROUND", (0, 0), (-1, 0), colors.skyblue),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+            ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTSIZE", (0, 0), (-1, 0), 14),
+            ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
+            ("BACKGROUND", (0, 1), (-1, -1), colors.beige),
+            ("GRID", (0, 0), (-1, -1), 1, colors.black),
+        ]
+    )
     table.setStyle(table_style)
     content.append(table)
 
@@ -447,12 +527,18 @@ def generate_report(teacher_id, year_id, cohort_id):
     content.append(Spacer(1, 24))  # Espaciado incrementado
     content.append(Paragraph("Firmas", title_style))
     for student in students:
-        content.append(Paragraph(f"{student.full_name}: _______________________", normal_style))
+        content.append(
+            Paragraph(f"{student.full_name}: _______________________", normal_style)
+        )
         content.append(Spacer(1, 12))  # Espaciado entre firmas
 
     # Nota sobre firmas
     content.append(Spacer(1, 24))
-    content.append(Paragraph("Nota: El estudiante que no firme no tendrá su nota registrada.", note_style))
+    content.append(
+        Paragraph(
+            "Nota: El estudiante que no firme no tendrá su nota registrada.", note_style
+        )
+    )
 
     doc.build(content)
 
@@ -464,12 +550,11 @@ def generate_report(teacher_id, year_id, cohort_id):
     return response
 
 
-@app.route('/logout')
+@app.route("/logout")
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for('login'))
-
+    return redirect(url_for("login"))
 
 
 @app.route("/create_db")
@@ -491,7 +576,7 @@ def create_db():
 
     # Puedes establecer un usuario específico como creador de estos perfiles si lo deseas.
     # En este ejemplo, se usa "Admin" como creador.
-    session['user_id'] = 'Admin'
+    session["user_id"] = "Admin"
 
     # Crea un usuario admin por defecto si aún no existe
     default_admin = User.query.filter_by(email="resistsaw@gmail.com").first()
@@ -499,9 +584,9 @@ def create_db():
         new_admin = User(
             identificacion=12345,
             full_name="Admin Steve",
-            password=generate_password_hash("RgD0c3ncia16@", method='sha256'),
+            password=generate_password_hash("RgD0c3ncia16@", method="sha256"),
             email="resistsaw@gmail.com",
-            profile=admin_profile
+            profile=admin_profile,
         )
         db.session.add(new_admin)
 
