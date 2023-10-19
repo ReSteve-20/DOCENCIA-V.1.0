@@ -91,6 +91,17 @@
 </head>
 
 <body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="container mt-3">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
     <div class="container">
         <h2>Estudiante: {{ student.full_name }}</h2>
         <form action="{{ url_for('add_grade', student_id=student.id) }}" method="post">

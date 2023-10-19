@@ -82,6 +82,7 @@
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                             <li><a class="dropdown-item" href="{{ url_for('register') }}">Registrar Docente</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('add_year') }}">Añadir año</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('add_universidad') }}">Añadir universidad</a></li>
                         </ul>
                     </li>
                 </ul>
@@ -89,7 +90,18 @@
             </div>
         </div>
     </nav>
-<br>
+    <br>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="container mt-3">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
     <div class="container form-container">
         <h2>Crear cohorte</h2>
         <form action="{{ url_for('add_cohort') }}" method="post">
@@ -112,12 +124,12 @@
     <!-- Enlaces a los archivos JavaScript de Bootstrap desde tu carpeta static -->
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
     <script>
-        document.addEventListener("DOMContentLoaded", function() {  // Espera a que el documento esté completamente cargado
+        document.addEventListener("DOMContentLoaded", function () {  // Espera a que el documento esté completamente cargado
             var form = document.querySelector("form");  // Selecciona el formulario
-    
-            form.addEventListener("submit", function(event) {  // Escucha el evento 'submit' del formulario
+
+            form.addEventListener("submit", function (event) {  // Escucha el evento 'submit' del formulario
                 var yearSelect = document.querySelector("select[name='year_id']");  // Selecciona el combobox
-    
+
                 if (yearSelect.value === "0") {  // Si el valor del combobox es "0" (la opción "--Seleccione--")
                     event.preventDefault();  // Previene la acción por defecto (enviar el formulario)
                     alert("Por favor, seleccione un año.");  // Muestra un mensaje al usuario

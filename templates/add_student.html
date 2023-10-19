@@ -81,6 +81,7 @@
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                             <li><a class="dropdown-item" href="{{ url_for('register') }}">Registrar Docente</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('add_year') }}">Añadir año</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('add_universidad') }}">Añadir universidad</a></li>
                         </ul>
                     </li>
                 </ul>
@@ -88,12 +89,22 @@
             </div>
         </div>
     </nav>
-<br>
+    <br>{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="container mt-3">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
     <div class="container form-container">
         <h2>Registrar estudiante</h2>
         <form action="{{ url_for('add_student') }}" method="post">
             <div class="form-group">
-                <label class="form-label" for="id_type">Tipo de identificacion:</label> 
+                <label class="form-label" for="id_type">Tipo de identificacion:</label>
                 <select class="form-input" name="tipo_identificacion" required>
                     <option value="CC">CC</option>
                     <option value="TI">TI</option>
@@ -107,7 +118,32 @@
             </div>
             <div class="form-group">
                 <label class="form-label" for="name">Nombre completo:</label>
-                <input class="form-input" type="text" id="full_name" name="full_name" style="text-transform: uppercase;" required>
+                <input class="form-input" type="text" id="full_name" name="full_name" style="text-transform: uppercase;"
+                    required>
+            </div>
+            <div><label class="form-label" for="sex_type">Sexo:</label>
+                <select class="form-input" name="sexo" required>
+                    <option value="MASCULINO">MASCULINO</option>
+                    <option value="FEMENINO">FEMENINO</option>
+                    <option value="OTRO">OTRO</option>
+                </select>
+            </div>
+            <div><label class="form-label" for="u_type">Universidad:</label>
+                <select class="form-input" name="universidad_id" required>
+                    <option value="0">--Seleccione--</option>
+                    {% for universidad in universidades %}
+                    <option value="{{ universidad.id }}">{{ universidad.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="form-label" for="name">Teléfono:</label>
+                <input class="form-input" type="number" id="telefono" name="telefono" required>
+            </div>
+            <div>
+                <label class="form-label" for="name">Dirección:</label>
+                <input class="form-input" type="text" id="direccion_residencia" name="direccion_residencia" style="text-transform: uppercase;"
+                    required>
             </div>
             <div class="form-group">
                 <label class="form-label" for="cohort_id">Asignar corte</label>
@@ -118,11 +154,14 @@
                     {% endfor %}
                 </select>
             </div>
-
-
-            <button type="submit" class="btn btn-primary">Crear</button>
+            <button type="submit" class="btn btn-primary">Crear</button><br>
             <a href="{{ url_for('dashboard') }}">Atrás</a>
-        </form>
+            </form>
+    </div>
+
+
+
+
     </div>
 
     <!-- Enlaces a los archivos JavaScript de Bootstrap desde tu carpeta static -->
@@ -130,13 +169,19 @@
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             var form = document.querySelector("form");
+            
 
             form.addEventListener("submit", function (event) {
                 var yearSelect = document.querySelector("select[name='cohort_id']");
+                var UniSelect = document.querySelector("select[name='universidad.id']")
 
                 if (yearSelect.value === "0") {
                     event.preventDefault();
-                    alert("Por favor, seleccione un año.");
+                    alert("Por favor, seleccione un cohorte.");
+                }
+                if (yearSelect.value === "0") {
+                    event.preventDefault();
+                    alert("Por favor, seleccione una universidad.");
                 }
             });
         });

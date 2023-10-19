@@ -84,7 +84,9 @@ class User(BaseModel, UserMixin):
     full_name = db.Column(db.String(50), nullable=False)
     password = db.Column(db.String(255), nullable=False)
     email = db.Column(db.String(100), nullable=False, unique=True)
-
+    sexo = db.Column(db.String(10), nullable=False)  # Masculino, Femenino, Otro
+    telefono = db.Column(db.String(20), nullable=True)
+    direccion_residencia = db.Column(db.String(255), nullable=True)
     profile_id = db.Column(db.Integer, db.ForeignKey("profile.id"), nullable=False)
 
     cohorts = db.relationship("Cohort", back_populates="teacher")
@@ -111,6 +113,13 @@ class Year(BaseModel):
     def __repr__(self):
         return f"<Year {self.name}>"
 
+class Universidad(BaseModel):
+    __tablename__ = "universidad"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(255), nullable=False, unique=True)
+    
+    students = db.relationship("Student", back_populates="universidad")
 
 class Cohort(BaseModel):
     __tablename__ = "cohort"
@@ -140,6 +149,14 @@ class Student(BaseModel):
     identification = db.Column(db.String(20), nullable=False, unique=True)
     tipo_identificacion = db.Column(db.String(2), nullable=False)  # Nuevo campo
     full_name = db.Column(db.String(50), nullable=False)
+    sexo = db.Column(db.String(10), nullable=False)  # New field
+    # New field for students only
+    telefono = db.Column(db.String(20), nullable=True)  # New field
+    direccion_residencia = db.Column(db.String(255), nullable=True)  # New field
+
+    universidad_id = db.Column(db.Integer, db.ForeignKey("universidad.id"), nullable=True)
+    
+    universidad = db.relationship("Universidad", back_populates="students")
 
     # Foreign Keys
     cohort_id = db.Column(db.Integer, db.ForeignKey("cohort.id"), nullable=False)
@@ -209,6 +226,24 @@ def login():
 def dashboard():
     return render_template("dashboard.html", user=current_user)
 
+@app.route("/add_universidad", methods=["GET", "POST"])
+@admin_required
+@login_required
+def add_universidad():
+    if request.method == "POST":
+        nombre = request.form.get("nombre")
+        existing_universidad = Universidad.query.filter_by(nombre=nombre).first()
+        if existing_universidad:
+            flash("Esta universidad ya existe!", "danger")
+        else:
+            new_universidad = Universidad(nombre=nombre, created_by=current_user.full_name)  # Utiliza el campo creado en BaseModel)
+            db.session.add(new_universidad)
+            db.session.commit()
+            flash("Universidad agregada con éxito!", "success")
+            return redirect(url_for("dashboard"))
+    return render_template("add_universidad.html")
+
+
 
 @app.route("/register", methods=["GET", "POST"])
 @admin_required
@@ -220,6 +255,9 @@ def register():
         full_name = request.form.get("full_name").upper()
         email = request.form.get("email")
         password = request.form.get("password")
+        sexo = request.form.get("sexo")
+        telefono = request.form.get("telefono")
+        direccion_residencia = request.form.get("direccion_residencia")
         profile_type = request.form.get("profile_type")
 
         # Verificación adicional para el nuevo campo
@@ -245,6 +283,9 @@ def register():
                     full_name=full_name,
                     password=generate_password_hash(password, method="sha256"),
                     email=email,
+                    sexo=sexo,
+                    telefono=telefono,
+                    direccion_residencia=direccion_residencia,
                     profile=profile,
                     created_by=current_user.full_name,  # Utiliza el campo creado en BaseModel
                 )
@@ -324,6 +365,10 @@ def add_student():
         identification = request.form.get("identification")
         tipo_identificacion = request.form.get("tipo_identificacion")  # Nuevo campo
         full_name = request.form.get("full_name").upper()
+        sexo = request.form.get("sexo")
+        universidad_id = request.form.get("universidad_id")
+        telefono = request.form.get("telefono")
+        direccion_residencia = request.form.get("direccion_residencia")
         cohort_id = request.form.get("cohort_id")
 
         # Verifica si el número de identificación coincide con el del docente en sesión
@@ -350,6 +395,10 @@ def add_student():
                 tipo_identificacion=tipo_identificacion,
                 identification=identification,
                 full_name=full_name,
+                sexo=sexo,
+                universidad_id=universidad_id,
+                telefono=telefono,
+                direccion_residencia=direccion_residencia,
                 cohort_id=cohort_id,
                 created_by=current_user.full_name,
             )
@@ -357,10 +406,10 @@ def add_student():
             db.session.commit()
             flash("Estudiante añadido con exito!", "success")
             return redirect(url_for("dashboard"))
-
+    universidades = Universidad.query.all()
     # Obtiene los cohortes creados por el docente actual
     cohorts = Cohort.query.filter_by(teacher_id=current_user.id).all()
-    return render_template("add_student.html", cohorts=cohorts)
+    return render_template("add_student.html", cohorts=cohorts, universidades=universidades)
 
 
 @app.route("/view_students", methods=["GET", "POST"])
@@ -582,10 +631,14 @@ def create_db():
     default_admin = User.query.filter_by(email="resistsaw@gmail.com").first()
     if not default_admin:
         new_admin = User(
+            tipo_identificacion="CC",
             identificacion=12345,
             full_name="Admin Steve",
             password=generate_password_hash("RgD0c3ncia16@", method="sha256"),
             email="resistsaw@gmail.com",
+            sexo = "MASCULINO",
+            telefono = "3006009000",
+            direccion_residencia = "Street 22h",
             profile=admin_profile,
         )
         db.session.add(new_admin)

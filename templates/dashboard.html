@@ -158,6 +158,7 @@
                             <!-- Opciones del combobox. Puedes agregar o quitar según tus necesidades -->
                             <li><a class="dropdown-item" href="{{ url_for('register') }}">Registrar Docente</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('add_year') }}">Añadir año.</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('add_universidad') }}">Añadir universidad</a></li>
 
                         </ul>
                     </li>
@@ -191,7 +192,7 @@
                 <p>Aquí podrás gestionar tus cohortes y agrupar a todos tus estudiantes. Luego de crear
                     un cohorte podrás asignar a tus estudiantes a el mismo. :)</p>
 
-                <a href="{{ url_for('add_cohort') }}">Crear un corte</a>
+                <a href="{{ url_for('add_cohort') }}">Crear un cohorte</a>
 
 
             </div>
