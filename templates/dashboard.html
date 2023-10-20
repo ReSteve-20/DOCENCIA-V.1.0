@@ -11,8 +11,33 @@
 
     <!-- Agrega otros estilos personalizados si los tienes -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
 
     <style>
+        /* Añadir un media query para pantallas pequeñas (menos de 768px) */
+        @media (max-width: 767px) {
+            .subcontainer-wrapper {
+                flex-direction: column;
+                /* Los subcontenedores se apilarán verticalmente */
+                align-items: center;
+            }
+
+            .subcontainer.cohortes,
+            .subcontainer.small {
+                width: 90%;
+                /* Ocupará el 90% del ancho de la pantalla */
+                margin-bottom: 20px;
+                /* Espacio entre subcontenedores */
+                margin-right: 0;
+            }
+        }
+
+        /* Añadir un media query para pantallas medianas (768px a 992px) */
+        @media (min-width: 768px) and (max-width: 992px) {
+            /* Puedes hacer ajustes específicos para este rango de tamaño aquí */
+        }
+
         body {
             background: linear-gradient(to bottom, #1ca0f8, #fc91cf);
             font-family: Arial, sans-serif;
@@ -94,27 +119,77 @@
         }
 
         /* Estilo para el contenedor de los subcontenedores */
+        /* Estilo para el contenedor principal de los subcontenedores */
         .subcontainer-wrapper {
             display: flex;
-            justify-content: space-between;
-            /* Espacio igual entre los subcontenedores */
-            flex-wrap: wrap;
-            /* Para que los subcontenedores se ajusten si la pantalla es estrecha */
-            max-width: 900px;
-            /* Ancho máximo para evitar que se extiendan demasiado */
+            flex-direction: row;
+            max-width: 400px;
+            /* 4cm */
+            height: 250px;
+            /* 5cm */
             margin: 0 auto;
         }
 
-        /* Estilo para subcontenedores blancos */
         .subcontainer {
-            flex-basis: calc(33.33% - 20px);
-            /* 33.33% de ancho menos el espacio entre ellos */
             background-color: #fff;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
+            cursor: pointer;
+            /* Cambia el cursor a mano al pasar por encima */
+            flex-basis: calc(25% - 20px);
+            /* Ajusta el tamaño de los subcontenedores */
         }
+
+        /* Estilo para el subcontenedor de Cohortes */
+        .subcontainer.cohortes {
+            width: 200px;
+            /* 2cm */
+            height: 250px;
+            /* 5cm */
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-direction: column;
+            /* Cambio importante */
+            margin-right: 23px;
+        }
+
+        .subcontainer-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Estilo para los subcontenedores de Estudiantes y Calificaciones */
+        .subcontainer.small {
+            width: 200px;
+            /* 2cm */
+            height: 125px;
+            /* 2.5cm */
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-direction: column;
+            /* Cambio importante */
+        }
+
+        /* Estilo para los íconos dentro de los subcontenedores */
+        .subcontainer i {
+            font-size: 36px;
+            margin-right: 10px;
+
+        }
+
+
 
         .subcontainer h2 {
             font-size: 24px;
@@ -158,7 +233,8 @@
                             <!-- Opciones del combobox. Puedes agregar o quitar según tus necesidades -->
                             <li><a class="dropdown-item" href="{{ url_for('register') }}">Registrar Docente</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('add_year') }}">Añadir año.</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('add_universidad') }}">Añadir universidad</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('add_universidad') }}">Añadir universidad</a>
+                            </li>
 
                         </ul>
                     </li>
@@ -184,44 +260,34 @@
         <h1>¡Bienvenido, {{ user.full_name }}!</h1>
         <p>¿Qué quieres hacer hoy?</p>
 
-        <!-- Contenedor de los subcontenedores -->
         <div class="subcontainer-wrapper">
-            <!-- Subcontenedor 1 -->
-            <div class="subcontainer">
+            <!-- Subcontenedor de Cohortes -->
+            <div class="subcontainer cohortes" onclick="location.href='{{ url_for('add_cohort') }}'">
+                <i class="fas fa-users"></i>
                 <h2>Cohortes</h2>
-                <p>Aquí podrás gestionar tus cohortes y agrupar a todos tus estudiantes. Luego de crear
-                    un cohorte podrás asignar a tus estudiantes a el mismo. :)</p>
-
-                <a href="{{ url_for('add_cohort') }}">Crear un cohorte</a>
-
-
             </div>
 
-            <!-- Subcontenedor 2 -->
-            <div class="subcontainer">
-                <h2>Estudiantes</h2>
-                <p>Asigna tus estudiantes a tus cohortes, manten la
-                    organización entre los alumnos a tu cargo. :)
-                </p>
-                <a href="{{ url_for('add_student') }}">Registrar Estudiantes</a>
-            </div>
+            <!-- Contenedor para Estudiantes y Calificaciones -->
+            <div class="subcontainer-group">
+                <!-- Subcontenedor de Estudiantes -->
+                <div class="subcontainer small" onclick="location.href='{{ url_for('add_student') }}'">
+                    <i class="fas fa-user-graduate"></i>
 
-            <!-- Subcontenedor 3 -->
-            <div class="subcontainer">
-                <h2>Calificaciones</h2>
-                <p>Registra las Calificaciones de cada uno de tus estudiantes.
-                    Luego podrás generar un reporte con las Calificaciones de todos
-                    para compartirlas con tu clase. :)
-                </p>
-                <a href="{{ url_for('view_students') }}">Mis estudiantes</a>
+                    <h2>Estudiantes</h2>
+                </div>
+
+                <!-- Subcontenedor de Calificaciones -->
+                <div class="subcontainer small" onclick="location.href='{{ url_for('view_students') }}'">
+                    <i class="fas fa-star"></i>
+
+                    <h2>Calificaciones</h2>
+                </div>
             </div>
         </div>
 
-        <!-- Puedes agregar contenido adicional aquí -->
-    </div>
 
-    <!-- Enlaces a los archivos JavaScript de Bootstrap desde tu carpeta static -->
-    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+        <!-- Enlaces a los archivos JavaScript de Bootstrap desde tu carpeta static -->
+        <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
 </body>
 
 </html>
