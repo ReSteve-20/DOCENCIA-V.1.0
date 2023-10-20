@@ -148,7 +148,7 @@
             /* 2cm */
             height: 250px;
             /* 5cm */
-            background-color: #fff;
+            background-color: #ffffff;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             display: flex;
@@ -158,6 +158,14 @@
             flex-direction: column;
             /* Cambio importante */
             margin-right: 23px;
+        }
+
+        .subcontainer.cohortes:hover {
+            background-color: #d8d8ff;
+            width: 210px;
+            /* 2cm */
+            height: 260px;
+            /* 5cm */
         }
 
         .subcontainer-group {
@@ -171,7 +179,7 @@
             /* 2cm */
             height: 125px;
             /* 2.5cm */
-            background-color: #fff;
+            background-color: #ffffff;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             display: flex;
@@ -179,13 +187,24 @@
             justify-content: center;
             cursor: pointer;
             flex-direction: column;
+
             /* Cambio importante */
+        }
+
+        .subcontainer.small:hover {
+            background-color: #ffd8ef;
+            width: 210px;
+            /* 2cm */
+            height: 135px;
+            /* 2.5cm */
         }
 
         /* Estilo para los íconos dentro de los subcontenedores */
         .subcontainer i {
             font-size: 36px;
-            margin-right: 10px;
+            margin-right: auto;
+            margin-left: auto;
+            
 
         }
 
@@ -264,7 +283,8 @@
             <!-- Subcontenedor de Cohortes -->
             <div class="subcontainer cohortes" onclick="location.href='{{ url_for('add_cohort') }}'">
                 <i class="fas fa-users"></i>
-                <h2>Cohortes</h2>
+                <h2>Crear Cohorte</h2>
+                
             </div>
 
             <!-- Contenedor para Estudiantes y Calificaciones -->
@@ -273,7 +293,7 @@
                 <div class="subcontainer small" onclick="location.href='{{ url_for('add_student') }}'">
                     <i class="fas fa-user-graduate"></i>
 
-                    <h2>Estudiantes</h2>
+                    <h2>Inscribir Estudiantes</h2>
                 </div>
 
                 <!-- Subcontenedor de Calificaciones -->
