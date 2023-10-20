@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -23,9 +24,10 @@
         .container {
             text-align: center;
             margin-top: 50px;
-            max-width: 700px; /* Ajusta el ancho máximo del container según tus preferencias */
-            
-            
+            max-width: 700px;
+            /* Ajusta el ancho máximo del container según tus preferencias */
+
+
         }
 
         .form-container {
@@ -74,6 +76,7 @@
         }
     </style>
 </head>
+
 <body>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -88,8 +91,11 @@
     {% endif %}
     {% endwith %}
     <div class="container form-container">
-        <h2>Registrar estudiante</h2>
-        <form action="{{ url_for('add_student') }}" method="post">
+        <h2>{% if student %}Editar estudiante: {{student.full_name}}{% else %}Registrar estudiante{% endif %}</h2>
+
+        <form
+            action="{{ url_for('edit_student' if student else 'add_student', student_id=student.id if student else None) }}"
+            method="post">
             <div class="form-columns">
                 <div class="form-column">
                     <!-- Campos de la primera columna -->
@@ -103,9 +109,12 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="name">Identificacion:</label>
-                        <input class="form-input" type="number" id="identification" name="identification" required>
+                        <label class="form-label" for="name">Nombre completo:</label>
+                        <input class="form-input" type="text" id="full_name" name="full_name"
+                            style="text-transform: uppercase;" value="{% if student %}{{student.full_name}}{% endif %}"
+                            required>
                     </div>
+
                     <div class="form-group">
                         <label class="form-label" for="sex_type">Sexo:</label>
                         <select class="form-input" name="sexo" required>
@@ -116,15 +125,16 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="name">Teléfono:</label>
-                        <input class="form-input" type="number" id="telefono" name="telefono" required>
+                        <input class="form-input" type="number" id="telefono" name="telefono"
+                            value="{% if student %}{{student.telefono}}{% endif %}" required>
                     </div>
                 </div>
                 <div class="form-column">
                     <!-- Campos de la segunda columna -->
                     <div class="form-group">
-                        <label class="form-label" for="name">Nombre completo:</label>
-                        <input class="form-input" type="text" id="full_name" name="full_name"
-                            style="text-transform: uppercase;" required>
+                        <label class="form-label" for="name">Identificacion:</label>
+                        <input class="form-input" type="number" id="identification" name="identification"
+                            value="{% if student %}{{student.identification}}{% else %}{% endif %}" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="u_type">Universidad:</label>
@@ -138,7 +148,7 @@
                     <div class="form-group">
                         <label class="form-label" for="name">Dirección:</label>
                         <input class="form-input" type="text" id="direccion_residencia" name="direccion_residencia"
-                            style="text-transform: uppercase;" required>
+                            style="text-transform: uppercase;" value="{% if student %}{{student.direccion_residencia}}{% else %}{% endif %}" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="cohort_id">Asignar cohorte</label>
@@ -151,7 +161,8 @@
                     </div>
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary">Crear</button><br>
+            <button type="submit" class="btn btn-primary">{% if student %}Actualizar{% else %}Crear{% endif
+                %}</button><br>
             <a href="{{ url_for('dashboard') }}">Atrás</a>
         </form>
     </div>
@@ -178,4 +189,5 @@
         });
     </script>
 </body>
+
 </html>

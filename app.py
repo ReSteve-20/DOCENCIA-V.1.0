@@ -31,8 +31,8 @@ from reportlab.lib.pagesizes import letter, landscape
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-
 from io import BytesIO
+from datetime import datetime
 
 
 def current_time_in_bogota():
@@ -419,6 +419,40 @@ def add_student():
         "add_student.html", cohorts=cohorts, universidades=universidades
     )
 
+@app.route('/edit_student/<int:student_id>', methods=['GET', 'POST'])
+def edit_student(student_id):
+    # 1. Recuperar los datos del estudiante usando student_id
+    student = Student.query.get_or_404(student_id)
+
+    # Si se envía el formulario (POST request)
+    if request.method == 'POST':
+        # Aquí puedes agregar validaciones como en el método de agregar estudiante
+
+        # 2. Actualizar los datos del estudiante con los datos del formulario
+        student.tipo_identificacion = request.form['tipo_identificacion']
+        student.identification = request.form['identification']
+        student.full_name = request.form['full_name'].upper()
+        student.sexo = request.form['sexo']
+        student.universidad_id = request.form['universidad_id']
+        student.telefono = request.form['telefono']
+        student.direccion_residencia = request.form['direccion_residencia']
+        student.cohort_id = request.form['cohort_id']
+
+        # 3. Actualizar metadatos
+        student.modified_by = current_user.full_name
+        student.updated_at = datetime.utcnow()
+
+        # Guardar cambios en la base de datos
+        db.session.commit()
+
+        flash('Datos del estudiante actualizados con éxito!', 'success')
+        return redirect(url_for('dashboard'))
+
+    # 4. Renderizar la plantilla add_student.html con los datos existentes del estudiante
+    universidades = Universidad.query.all()
+    cohorts = Cohort.query.filter_by(teacher_id=current_user.id).all()
+    return render_template('add_student.html', student=student, cohorts=cohorts, universidades=universidades)
+
 
 @app.route("/view_students", methods=["GET", "POST"])
 @login_required
@@ -441,6 +475,21 @@ def view_students():
         selected_cohort=selected_cohort,
     )
 
+@app.route('/delete_student/<int:student_id>', methods=['POST'])
+@login_required
+def delete_student(student_id):
+    # 1. Recuperar el estudiante usando student_id
+    student = Student.query.get_or_404(student_id)
+
+    # 2. Eliminar el estudiante de la base de datos
+    db.session.delete(student)
+    db.session.commit()
+
+    # Mostrar un mensaje de confirmación
+    flash('Estudiante eliminado con éxito!', 'success')
+
+    # 3. Redireccionar al panel de control o a la lista de estudiantes
+    return redirect(url_for('view_students'))
 
 @app.route("/add_grade/<int:student_id>", methods=["GET", "POST"])
 @login_required
