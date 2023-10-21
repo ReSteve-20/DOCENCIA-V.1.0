@@ -156,6 +156,7 @@ class Student(BaseModel):
     # New field for students only
     telefono = db.Column(db.String(20), nullable=True)  # New field
     direccion_residencia = db.Column(db.String(255), nullable=True)  # New field
+    is_active = db.Column(db.Boolean, default=True)
 
     universidad_id = db.Column(
         db.Integer, db.ForeignKey("universidad.id"), nullable=True
@@ -311,12 +312,10 @@ def register():
                 )
                 db.session.add(new_user)
                 db.session.commit()
-                flash("User registration successful.", "success")
+                flash("Docente Registrado!!.", "success")
                 return redirect(url_for("dashboard"))
             else:
-                flash(
-                    "Profile not found. Please choose a valid profile type.", "danger"
-                )
+                flash("No encontrado, intente nuevamente.", "danger")
 
     return render_template("register.html")
 
@@ -550,6 +549,19 @@ def view_students():
         students=students,
         selected_cohort=selected_cohort,
     )
+
+@app.route('/inactive_student/<int:student_id>', methods=['POST'])
+@login_required
+def inactive_student(student_id):
+    student = Student.query.get_or_404(student_id)
+    student.is_active = not student.is_active
+    student.modified_by = current_user.full_name
+
+    db.session.commit()
+    status = "activado" if student.is_active else "desactivado"
+    flash(f"Estudiante {status} con éxito.")
+
+    return redirect(url_for("view_students"))
 
 
 @app.route("/delete_student/<int:student_id>", methods=["POST"])
