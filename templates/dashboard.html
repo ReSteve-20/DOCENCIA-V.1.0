@@ -204,7 +204,7 @@
             font-size: 36px;
             margin-right: auto;
             margin-left: auto;
-            
+
 
         }
 
@@ -253,10 +253,12 @@
                             <li><a class="dropdown-item" href="{{ url_for('register') }}">Registrar Docente</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('add_year') }}">Añadir año.</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('add_universidad') }}">Añadir universidad</a>
+                            <li><a class="dropdown-item" href="{{ url_for('manage_teachers') }}">Gestionar Docentes</a>
                             </li>
-
-                        </ul>
                     </li>
+
+                </ul>
+                </li>
                 </ul>
 
                 <!-- Botón de cerrar sesión al final -->
@@ -284,7 +286,7 @@
             <div class="subcontainer cohortes" onclick="location.href='{{ url_for('add_cohort') }}'">
                 <i class="fas fa-users"></i>
                 <h2>Crear Cohorte</h2>
-                
+
             </div>
 
             <!-- Contenedor para Estudiantes y Calificaciones -->

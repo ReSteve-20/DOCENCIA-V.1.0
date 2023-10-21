@@ -80,7 +80,7 @@ class User(BaseModel, UserMixin):
 
     id = db.Column(db.Integer, primary_key=True)
     identificacion = db.Column(db.Integer, nullable=False, unique=True)
-    tipo_identificacion = db.Column(db.String(2), nullable=False)  # Nuevo campo
+    tipo_identificacion = db.Column(db.String(2), nullable=False)
     full_name = db.Column(db.String(50), nullable=False)
     password = db.Column(db.String(255), nullable=False)
     email = db.Column(db.String(100), nullable=False, unique=True)
@@ -88,6 +88,7 @@ class User(BaseModel, UserMixin):
     telefono = db.Column(db.String(20), nullable=True)
     direccion_residencia = db.Column(db.String(255), nullable=True)
     profile_id = db.Column(db.Integer, db.ForeignKey("profile.id"), nullable=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
 
     cohorts = db.relationship("Cohort", back_populates="teacher")
     profile = db.relationship("Profile", back_populates="users")
@@ -213,15 +214,28 @@ def admin_required(f):
 
 @app.route("/", methods=["GET", "POST"])
 def login():
+    # Si es una solicitud POST, procesa el formulario de inicio de sesión
     if request.method == "POST":
         email = request.form.get("email")
         password = request.form.get("password")
         user = User.query.filter_by(email=email).first()
+
+        # Verifica si el usuario existe y si la contraseña es correcta
         if user and check_password_hash(user.password, password):
+            # Si el usuario está desactivado, muestra un mensaje y redirige al login
+            if not user.is_active:
+                flash(
+                    "Su cuenta ha sido desactivada, si desconoce esta acción, comuníquese con su administrador"
+                )
+                return redirect(url_for("login"))
+
+            # Si todo está bien, inicia sesión y redirige al dashboard
             login_user(user)
             return redirect(url_for("dashboard"))
         else:
             flash("Usuario o contraseña incorrectos", "danger")
+
+    # Si es una solicitud GET o si hay un error en el formulario, muestra la página de inicio de sesión
     return render_template("login.html")
 
 
@@ -305,6 +319,56 @@ def register():
                 )
 
     return render_template("register.html")
+
+
+@app.route("/admin/docentes", methods=["GET", "POST"])
+@login_required
+@admin_required  # Asumiendo que ya existe un decorador para verificar si el usuario es administrador.
+def manage_teachers():
+    ID_ADMIN = 1
+    ID_DOCENTE_NORMAL = 2
+
+    if request.method == "POST":
+        # Si se envía el formulario para activar/desactivar docente
+        if "toggle_active" in request.form:
+            teacher_id = request.form.get("toggle_active")
+            teacher = User.query.get(teacher_id)
+            if teacher:
+                if teacher.profile_id == ID_ADMIN:
+                    flash("No se puede desactivar a un administrador.")
+                else:
+                    teacher.is_active = not teacher.is_active
+                    teacher.modified_by = current_user.full_name
+
+                    db.session.commit()
+                    status = "activado" if teacher.is_active else "desactivado"
+                    flash(f"Docente {status} con éxito.")
+
+    teachers = User.query.filter_by(profile_id=ID_DOCENTE_NORMAL).all()
+    return render_template("manage_teachers.html", teachers=teachers)
+
+
+@app.route("/admin/edit_teacher/<int:teacher_id>", methods=["GET", "POST"])
+@admin_required
+def edit_teacher(teacher_id):
+    teacher = User.query.get(teacher_id)
+    if not teacher:
+        flash("Docente no encontrado.")
+        return redirect(url_for("manage_teachers"))
+
+    if request.method == "POST":
+        # Actualizar los campos del docente
+        teacher.full_name = request.form.get("full_name")
+        teacher.email = request.form.get("email")
+        teacher.sexo = request.form.get("sexo")
+        teacher.telefono = request.form.get("telefono")
+        teacher.direccion_residencia = request.form.get("direccion_residencia")
+
+        db.session.commit()
+        flash("Datos del docente actualizados con éxito.")
+        return redirect(url_for("manage_teachers"))
+
+    return render_template("edit_teacher.html", teacher=teacher)
 
 
 @app.route("/add_year", methods=["GET", "POST"])
@@ -419,39 +483,51 @@ def add_student():
         "add_student.html", cohorts=cohorts, universidades=universidades
     )
 
-@app.route('/edit_student/<int:student_id>', methods=['GET', 'POST'])
+
+@app.route("/edit_student/<int:student_id>", methods=["GET", "POST"])
 def edit_student(student_id):
     # 1. Recuperar los datos del estudiante usando student_id
     student = Student.query.get_or_404(student_id)
 
     # Si se envía el formulario (POST request)
-    if request.method == 'POST':
-        # Aquí puedes agregar validaciones como en el método de agregar estudiante
+    if request.method == "POST":
+        if (student.tipo_identificacion != request.form["tipo_identificacion"]) or (
+            student.identification != request.form["identification"]
+        ):
+            flash("Por favor no modifique la identificación del estudiante", "danger")
+            return redirect(url_for("dashboard"))
+        else:
+            # Aquí puedes agregar validaciones como en el método de agregar estudiante
 
-        # 2. Actualizar los datos del estudiante con los datos del formulario
-        student.tipo_identificacion = request.form['tipo_identificacion']
-        student.identification = request.form['identification']
-        student.full_name = request.form['full_name'].upper()
-        student.sexo = request.form['sexo']
-        student.universidad_id = request.form['universidad_id']
-        student.telefono = request.form['telefono']
-        student.direccion_residencia = request.form['direccion_residencia']
-        student.cohort_id = request.form['cohort_id']
+            # 2. Actualizar los datos del estudiante con los datos del formulario
+            student.tipo_identificacion = request.form["tipo_identificacion"]
+            student.identification = request.form["identification"]
+            student.full_name = request.form["full_name"].upper()
+            student.sexo = request.form["sexo"]
+            student.universidad_id = request.form["universidad_id"]
+            student.telefono = request.form["telefono"]
+            student.direccion_residencia = request.form["direccion_residencia"]
+            student.cohort_id = request.form["cohort_id"]
 
-        # 3. Actualizar metadatos
-        student.modified_by = current_user.full_name
-        student.updated_at = datetime.utcnow()
+            # 3. Actualizar metadatos
+            student.modified_by = current_user.full_name
+            student.updated_at = datetime.utcnow()
 
-        # Guardar cambios en la base de datos
-        db.session.commit()
+            # Guardar cambios en la base de datos
+            db.session.commit()
 
-        flash('Datos del estudiante actualizados con éxito!', 'success')
-        return redirect(url_for('dashboard'))
+            flash("Datos del estudiante actualizados con éxito!", "success")
+            return redirect(url_for("dashboard"))
 
     # 4. Renderizar la plantilla add_student.html con los datos existentes del estudiante
     universidades = Universidad.query.all()
     cohorts = Cohort.query.filter_by(teacher_id=current_user.id).all()
-    return render_template('add_student.html', student=student, cohorts=cohorts, universidades=universidades)
+    return render_template(
+        "add_student.html",
+        student=student,
+        cohorts=cohorts,
+        universidades=universidades,
+    )
 
 
 @app.route("/view_students", methods=["GET", "POST"])
@@ -475,7 +551,8 @@ def view_students():
         selected_cohort=selected_cohort,
     )
 
-@app.route('/delete_student/<int:student_id>', methods=['POST'])
+
+@app.route("/delete_student/<int:student_id>", methods=["POST"])
 @login_required
 def delete_student(student_id):
     # 1. Recuperar el estudiante usando student_id
@@ -486,10 +563,11 @@ def delete_student(student_id):
     db.session.commit()
 
     # Mostrar un mensaje de confirmación
-    flash('Estudiante eliminado con éxito!', 'success')
+    flash("Estudiante eliminado con éxito!", "success")
 
     # 3. Redireccionar al panel de control o a la lista de estudiantes
-    return redirect(url_for('view_students'))
+    return redirect(url_for("view_students"))
+
 
 @app.route("/add_grade/<int:student_id>", methods=["GET", "POST"])
 @login_required

@@ -101,12 +101,17 @@
                     <!-- Campos de la primera columna -->
                     <div class="form-group">
                         <label class="form-label" for="id_type">Tipo de identificacion:</label>
+                        {% if student %}
+                        <input class="form-input" type="text" name="tipo_identificacion"
+                            value="{{student.tipo_identificacion}}" required readonly>
+                        {% else %}
                         <select class="form-input" name="tipo_identificacion" required>
                             <option value="CC">CC</option>
                             <option value="TI">TI</option>
                             <option value="CE">CE</option>
                             <option value="PA">PA</option>
                         </select>
+                        {% endif %}
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="name">Nombre completo:</label>
@@ -133,8 +138,13 @@
                     <!-- Campos de la segunda columna -->
                     <div class="form-group">
                         <label class="form-label" for="name">Identificacion:</label>
+                        {% if student %}
                         <input class="form-input" type="number" id="identification" name="identification"
-                            value="{% if student %}{{student.identification}}{% else %}{% endif %}" required>
+                            value="{{student.identification}}" readonly required>
+                        {% else %}
+                        <input class="form-input" type="number" id="identification" name="identification" required>
+                        {% endif %}
+
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="u_type">Universidad:</label>
@@ -148,7 +158,8 @@
                     <div class="form-group">
                         <label class="form-label" for="name">Dirección:</label>
                         <input class="form-input" type="text" id="direccion_residencia" name="direccion_residencia"
-                            style="text-transform: uppercase;" value="{% if student %}{{student.direccion_residencia}}{% else %}{% endif %}" required>
+                            style="text-transform: uppercase;"
+                            value="{% if student %}{{student.direccion_residencia}}{% else %}{% endif %}" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="cohort_id">Asignar cohorte</label>

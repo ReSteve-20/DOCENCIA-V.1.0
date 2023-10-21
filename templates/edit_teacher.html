@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Docente</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+    <!-- Estilos adicionales de register.html -->
+    <style>
+        body {
+            background: linear-gradient(to bottom, #1ca0f8, #fc91cf);
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        .form-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            /* Ancho máximo para el formulario */
+            margin: 0 auto;
+        }
+
+        .form-label {
+            font-size: 16px;
+            color: #333;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border: none;
+            border-bottom: 1px solid #ccc;
+            border-radius: 0;
+            background-color: transparent;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-bottom: 2px solid #007bff;
+        }
+
+        .nav-custom-radius {
+            border-radius: 5px;
+        }
+
+        /* Estilos para diseño en dos columnas */
+        @media (min-width: 768px) {
+            .form-row {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: space-between;
+            }
+
+            .form-group {
+                width: 48%;
+                /* Ancho de cada columna (48% para dos columnas) */
+            }
+        }
+    </style>
+    </style>
+</head>
+
+<body>
+    <h2>Editar Docente: {{ teacher.full_name }}</h2>
+    <div class="container form-container">
+        <form action="{{ url_for('edit_teacher', teacher_id=teacher.id) }}" method="post">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="tipo_identificacion">Tipo de identificación:</label>
+                    <input class="form-input" type="text" name="tipo_identificacion" value="{{ teacher.tipo_identificacion }}" readonly>
+
+                    
+
+                    <label class="form-label" for="full_name">Nombre Completo:</label>
+                    <input class="form-input" type="text" name="full_name" value="{{ teacher.full_name }}" required>
+
+                    <label class="form-label" for="email">Correo Electrónico:</label>
+                    <input class="form-input" type="email" name="email" value="{{ teacher.email }}" required>
+
+                    <label class="form-label" for="direccion_residencia">Dirección:</label>
+                    <input class="form-input" type="text" name="direccion_residencia" value="{{ teacher.direccion_residencia }}" required>
+                </div>
+                <div class="form-group">
+
+                    <label class="form-label" for="identificacion">Identificación:</label>
+                    <input class="form-input" type="number" name="identificacion" value="{{ teacher.identificacion }}" readonly>
+                    <label class="form-label" for="sexo">Sexo:</label>
+                    <select class="form-input" name="sexo" required>
+                        <option value="MASCULINO" {{ 'selected' if teacher.sexo == 'MASCULINO' else '' }}>MASCULINO</option>
+                        <option value="FEMENINO" {{ 'selected' if teacher.sexo == 'FEMENINO' else '' }}>FEMENINO</option>
+                        <option value="OTRO" {{ 'selected' if teacher.sexo == 'OTRO' else '' }}>OTRO</option>
+                    </select>
+
+                    <label class="form-label" for="telefono">Teléfono:</label>
+                    <input class="form-input" type="number" name="telefono" value="{{ teacher.telefono }}" required>
+                </div>
+            </div>
+            <button class="btn btn-primary" type="submit">Guardar Cambios</button>
+        </form>
+        <a href="{{ url_for('dashboard') }}">Atrás</a>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</body>
+
+</html>
