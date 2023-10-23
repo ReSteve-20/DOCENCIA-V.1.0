@@ -16,7 +16,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
-from sqlalchemy import event
+from sqlalchemy import event, func
 from flask_login import (
     LoginManager,
     UserMixin,
@@ -152,8 +152,12 @@ def register():
         telefono = request.form.get("telefono")
         direccion_residencia = request.form.get("direccion_residencia")
         profile_type = request.form.get("profile_type")
+        pin_security = request.form.get("pin_security")
 
         # Verificación adicional para el nuevo campo
+        if not pin_security or len(pin_security) != 6 or not pin_security.isdigit():
+            flash("El PIN de seguridad debe ser un número de 6 dígitos.", "danger")
+            return render_template("register.html")        
         if tipo_identificacion not in ["CC", "TI", "CE", "PA"]:
             flash("Tipo de identificación no válido.", "danger")
             return render_template("register.html")
@@ -180,7 +184,9 @@ def register():
                     telefono=telefono,
                     direccion_residencia=direccion_residencia,
                     profile=profile,
+                    pin_security=generate_password_hash(pin_security,method='sha256'),
                     created_by=current_user.full_name,  # Utiliza el campo creado en BaseModel
+                    
                 )
                 db.session.add(new_user)
                 db.session.commit()
@@ -278,6 +284,34 @@ def change_password():
             return redirect(url_for("dashboard"))
 
     return render_template("change_password.html")
+
+@app.route('/reset_password', methods=['GET', 'POST'])
+def reset_password():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        pin = request.form.get('pin')
+        new_password = request.form.get('new_password')
+        
+        # Buscar el usuario por correo electrónico
+        user = User.query.filter_by(email=email).first()
+        
+        if not user:
+            flash('No existe un usuario con ese correo electrónico.', 'danger')
+            return redirect(url_for('reset_password'))
+        
+        # Verificar si el PIN coincide
+        if not check_password_hash(user.pin_security, pin):
+            flash('PIN incorrecto. Por favor, inténtalo de nuevo.', 'danger')
+            return redirect(url_for('reset_password'))
+        
+        # Actualizar la contraseña del usuario
+        user.password = generate_password_hash(new_password, method='sha256')
+        db.session.commit()
+        
+        flash('Contraseña actualizada con éxito.', 'success')
+        return redirect(url_for('login'))
+    
+    return render_template('reset_password.html')
 
 
 @app.route("/add_year", methods=["GET", "POST"])
@@ -749,7 +783,7 @@ def view_logs():
     query = db.session.query(ActivityLog, User.full_name).join(User, User.id == ActivityLog.user_id)
 
     if date_filter:
-        query = query.filter(ActivityLog.timestamp == date_filter)
+        query = query.filter(func.date(ActivityLog.timestamp) == date_filter)
     if teacher_filter:
         query = query.filter(User.full_name == teacher_filter)
 

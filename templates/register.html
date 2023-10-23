@@ -80,6 +80,17 @@
 
 <body>
     <h2>Registro de docentes:</h2>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="container mt-3">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
     <div class="container form-container">
         <form action="{{ url_for('register') }}" method="post" onsubmit="return validateForm()">
             <div class="form-row">
@@ -100,10 +111,17 @@
 
                     <label class="form-label" for="password">Contraseña:</label>
                     <input class="form-input" type="password" name="password" id="password" required>
-                    
+
                     <label class="form-label" for="name">Dirección:</label>
                     <input class="form-input" type="text" id="direccion_residencia" name="direccion_residencia"
                         style="text-transform: uppercase;" required>
+
+                    <label class="form-label" for="pin_security">PIN de Seguridad:</label>
+                    <input class="form-input" type="number" name="pin_security" id="pin_security"
+                        placeholder="Ingrese un PIN de 6 dígitos" pattern="[0-9]{6}" required
+                        title="El PIN debe ser un número de 6 dígitos." maxlength="6">
+
+
 
                 </div>
                 <div class="form-group">
@@ -126,7 +144,7 @@
                     <input class="form-input" type="password" name="confirm_password" id="confirm_password" required>
 
 
-                    
+
 
                     <label class="form-label" for="profile_type">Tipo de docente:</label>
                     <select class="form-input" name="profile_type" id="profile_type" required>
@@ -134,8 +152,13 @@
                         <option value="admin">Administrador</option>
                         <option value="normal">Normal</option>
                     </select>
+                    <label class="form-label" for="confirm_pin_security">Confirmar PIN de Seguridad:</label>
+                    <input class="form-input" type="number" name="confirm_pin_security" id="confirm_pin_security"
+                        placeholder="Confirme el PIN de 6 dígitos" required>
                 </div>
             </div>
+            <small class="form-text text-muted">Guarde este PIN en un lugar seguro. Es la única forma de restablecer la contraseña si la olvida.</small><br>
+            
             <button class="btn btn-primary" type="submit">Registrar</button>
         </form>
         <a href="{{ url_for('dashboard') }}">Atrás</a>
@@ -147,18 +170,25 @@
         function validateForm() {
             var password = document.getElementById("password").value;
             var confirm_password = document.getElementById("confirm_password").value;
+            var pin_security = document.getElementById("pin_security").value;
+            var confirm_pin_security = document.getElementById("confirm_pin_security").value;
             var select = document.getElementById("profile_type");
-
+    
             if (password !== confirm_password) {
                 alert("Las contraseñas no coinciden. Por favor, inténtelo de nuevo.");
                 return false;
             }
-
+    
+            if (pin_security !== confirm_pin_security) {
+                alert("Los PINs de seguridad no coinciden. Por favor, inténtelo de nuevo.");
+                return false;
+            }
+    
             if (select.value === "0") {
                 alert("Por favor, seleccione un tipo de docente.");
                 return false;
             }
-
+    
             return true;
         }
     </script>

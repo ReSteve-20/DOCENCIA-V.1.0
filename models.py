@@ -61,6 +61,7 @@ class User(BaseModel, UserMixin):
     direccion_residencia = db.Column(db.String(255), nullable=True)
     profile_id = db.Column(db.Integer, db.ForeignKey("profile.id"), nullable=False)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
+    pin_security = db.Column(db.String(6), nullable=True)
 
     cohorts = db.relationship("Cohort", back_populates="teacher")
     profile = db.relationship("Profile", back_populates="users")

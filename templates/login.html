@@ -101,14 +101,14 @@
                 <input class="form-input" type="password" name="password" required>
 
                 <input type="submit" class="btn btn-primary" value="Iniciar Sesión">
-                {% with messages = get_flashed_messages() %}
+                {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
-                <div class="alert alert-danger">
-                    <ul class="list-unstyled">
-                        {% for message in messages %}
-                        <li>{{ message }}</li>
-                        {% endfor %}
-                    </ul>
+                <div class="container mt-3">
+                    {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
                 </div>
                 {% endif %}
                 {% endwith %}
@@ -117,6 +117,8 @@
 
             <div class="login-options">
                 <p>¿Aún no tienes una cuenta? Puedes solicitarla a un administrador.</p>
+                
+            <a href="{{ url_for('reset_password') }}">¿Olvidaste tu contraseña?</a>
                 
             </div>
         </div>
