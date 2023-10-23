@@ -255,6 +255,31 @@ def edit_teacher(teacher_id):
     return render_template("edit_teacher.html", teacher=teacher)
 
 
+@app.route("/change_password", methods=["GET", "POST"])
+@login_required
+def change_password():
+    if request.method == "POST":
+        current_password = request.form.get("current_password")
+        new_password = request.form.get("new_password")
+        confirm_password = request.form.get("confirm_password")
+
+        # Verify if the current password is correct
+        if not check_password_hash(current_user.password, current_password):
+            flash("Contraseña actual incorrecta", "danger")
+        elif new_password != confirm_password:
+            flash("Las contraseñas nuevas no coinciden", "danger")
+        else:
+            # Update the user's password with the new one
+            current_user.password = generate_password_hash(new_password, method="sha256")
+            db.session.commit()
+            log_activity(current_user, "Cambio de contraseña")
+
+            flash("Contraseña cambiada con éxito", "success")
+            return redirect(url_for("dashboard"))
+
+    return render_template("change_password.html")
+
+
 @app.route("/add_year", methods=["GET", "POST"])
 @login_required
 @admin_required
@@ -623,7 +648,7 @@ def generate_report(teacher_id, year_id, cohort_id):
     teacher = User.query.get(teacher_id)
     year = Year.query.get(year_id)
     cohort = Cohort.query.get(cohort_id)
-    students = Student.query.filter_by(cohort_id=cohort_id).all()
+    students = Student.query.filter_by(cohort_id=cohort_id, is_active=True).all()
 
     # Configura el documento
     filename = f"report_{cohort.name}_{year.name}.pdf"

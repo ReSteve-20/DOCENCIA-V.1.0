@@ -66,20 +66,26 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark nav-custom-radius">
         <div class="container-fluid">
+            <!-- Nombre o logo -->
             <a class="navbar-brand" href="{{ url_for('dashboard') }}">Inicio</a>
+
+            <!-- Botón de menú hamburguesa (para vistas móviles) -->
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown"
                 aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
+            <!-- Contenido de la barra de navegación -->
             <div class="collapse navbar-collapse" id="navbarNavDropdown">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <!-- Combobox con opciones de administrador -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button"
                             data-bs-toggle="dropdown" aria-expanded="false">
                             Opciones de Administrador
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                            <!-- Opciones del combobox. Puedes agregar o quitar según tus necesidades -->
                             <li><a class="dropdown-item" href="{{ url_for('register') }}">Registrar Docente</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('add_year') }}">Añadir año.</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('add_universidad') }}">Añadir universidad</a>
@@ -87,7 +93,19 @@
                             <li><a class="dropdown-item" href="{{ url_for('view_logs') }}">Ver Logs</a></li>
                         </ul>
                     </li>
+                    <!-- Opción de Mi perfil -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            Mi perfil
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                            <!-- Opciones del combobox. Puedes agregar o quitar según tus necesidades -->
+                            <li><a class="dropdown-item" href="{{ url_for('change_password') }}">Cambiar contraseña</a></li>
+                        </ul>
+                    </li>
                 </ul>
+                <!-- Botón de cerrar sesión al final -->
                 <a href="{{ url_for('logout') }}" class="btn btn-danger">Cerrar sesión</a>
             </div>
         </div>
