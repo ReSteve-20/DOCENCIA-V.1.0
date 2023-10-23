@@ -63,6 +63,19 @@ class BaseModel(db.Model):
     modified_by = db.Column(db.String(50), nullable=True)
 
 
+class ActivityLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    timestamp = db.Column(
+        db.DateTime, default=current_time_in_bogota, onupdate=current_time_in_bogota
+    )
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+    activity_type = db.Column(db.String(128))
+    details = db.Column(db.String(512))
+
+    def __repr__(self):
+        return f"<ActivityLog {self.activity_type} by User {self.user_id} at {self.timestamp}>"
+
+
 class Profile(BaseModel):
     __tablename__ = "profile"
 
@@ -196,6 +209,12 @@ class Grade(BaseModel):
         return f"<Grade {self.id} for Student {self.student_id}>"
 
 
+def log_activity(user, activity_type, details=None):
+    log = ActivityLog(user_id=user.id, activity_type=activity_type, details=details)
+    db.session.add(log)
+    db.session.commit()
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -232,6 +251,7 @@ def login():
 
             # Si todo está bien, inicia sesión y redirige al dashboard
             login_user(user)
+            log_activity(user, "Inicio de sesión")
             return redirect(url_for("dashboard"))
         else:
             flash("Usuario o contraseña incorrectos", "danger")
@@ -261,6 +281,9 @@ def add_universidad():
             )  # Utiliza el campo creado en BaseModel)
             db.session.add(new_universidad)
             db.session.commit()
+            log_activity(
+                current_user, "Creación de universidad", f"Universidad: {nombre}"
+            )
             flash("Universidad agregada con éxito!", "success")
             return redirect(url_for("dashboard"))
     return render_template("add_universidad.html")
@@ -312,6 +335,9 @@ def register():
                 )
                 db.session.add(new_user)
                 db.session.commit()
+                log_activity(
+                    current_user, "Registro de docente", f"Docente: {full_name}"
+                )
                 flash("Docente Registrado!!.", "success")
                 return redirect(url_for("dashboard"))
             else:
@@ -341,6 +367,11 @@ def manage_teachers():
 
                     db.session.commit()
                     status = "activado" if teacher.is_active else "desactivado"
+                    log_activity(
+                        current_user,
+                        f"Docente {status}",
+                        f"Docente: {teacher.full_name}",
+                    )
                     flash(f"Docente {status} con éxito.")
 
     teachers = User.query.filter_by(profile_id=ID_DOCENTE_NORMAL).all()
@@ -364,6 +395,11 @@ def edit_teacher(teacher_id):
         teacher.direccion_residencia = request.form.get("direccion_residencia")
 
         db.session.commit()
+        log_activity(
+            current_user,
+            "Edición de docente",
+            f"Docente ID: {teacher_id}, Nombre: {teacher.full_name}",
+        )
         flash("Datos del docente actualizados con éxito.")
         return redirect(url_for("manage_teachers"))
 
@@ -388,6 +424,7 @@ def add_year():
             )
             db.session.add(new_year)
             db.session.commit()
+            log_activity(current_user, "Creación de año", f"Año: {name}")
             flash("Año creado con exito!", "success")
             return redirect(url_for("dashboard"))
 
@@ -418,6 +455,12 @@ def add_cohort():
             )
             db.session.add(new_cohort)
             db.session.commit()
+            year_name = Year.query.get(year_id).name
+            log_activity(
+                current_user,
+                "Creación de cohorte",
+                f"Cohorte: {name}, Año: {year_name}",
+            )
             flash("Cohorte añadido correctamente!.", "success")
             return redirect(url_for("dashboard"))
 
@@ -473,6 +516,11 @@ def add_student():
             )
             db.session.add(new_student)
             db.session.commit()
+            log_activity(
+                current_user,
+                "Adición de estudiante",
+                f"Estudiante: {full_name}, ID: {identification}",
+            )
             flash("Estudiante añadido con exito!", "success")
             return redirect(url_for("dashboard"))
     universidades = Universidad.query.all()
@@ -514,7 +562,11 @@ def edit_student(student_id):
 
             # Guardar cambios en la base de datos
             db.session.commit()
-
+            log_activity(
+                current_user,
+                "Edición de estudiante",
+                f"Estudiante: {student.full_name}, ID: {student.identification}",
+            )
             flash("Datos del estudiante actualizados con éxito!", "success")
             return redirect(url_for("dashboard"))
 
@@ -550,7 +602,8 @@ def view_students():
         selected_cohort=selected_cohort,
     )
 
-@app.route('/inactive_student/<int:student_id>', methods=['POST'])
+
+@app.route("/inactive_student/<int:student_id>", methods=["POST"])
 @login_required
 def inactive_student(student_id):
     student = Student.query.get_or_404(student_id)
@@ -559,12 +612,18 @@ def inactive_student(student_id):
 
     db.session.commit()
     status = "activado" if student.is_active else "desactivado"
+    cohort_name = Cohort.query.get(student.cohort_id).name
+    log_activity(
+        current_user,
+        f"Estudiante {status}",
+        f"Estudiante: {student.full_name}, Cohorte: {cohort_name}",
+    )
     flash(f"Estudiante {status} con éxito.")
 
     return redirect(url_for("view_students"))
 
 
-@app.route("/delete_student/<int:student_id>", methods=["POST"])
+"""@app.route("/delete_student/<int:student_id>", methods=["POST"])
 @login_required
 def delete_student(student_id):
     # 1. Recuperar el estudiante usando student_id
@@ -578,7 +637,7 @@ def delete_student(student_id):
     flash("Estudiante eliminado con éxito!", "success")
 
     # 3. Redireccionar al panel de control o a la lista de estudiantes
-    return redirect(url_for("view_students"))
+    return redirect(url_for("view_students"))"""
 
 
 @app.route("/add_grade/<int:student_id>", methods=["GET", "POST"])
@@ -601,7 +660,7 @@ def add_grade(student_id):
             self_evaluation = float(request.form.get("self_evaluation"))
             group_grade = float(request.form.get("group_grade"))
 
-            final_grade = (teacher_grade + self_evaluation + group_grade) / 3
+            final_grade = round((teacher_grade + self_evaluation + group_grade) / 3, 2)
             grade = Grade(
                 teacher_grade=teacher_grade,
                 self_evaluation=self_evaluation,
@@ -612,6 +671,11 @@ def add_grade(student_id):
             )
             db.session.add(grade)
             db.session.commit()
+            log_activity(
+                current_user,
+                "Adición de calificaciones",
+                f"Estudiante: {student.full_name}, Cohorte: {student.cohort.name}, Año: {student.cohort.year.name}, Nota final: {final_grade}",
+            )
             flash("Calificaciones añadidas con exito!.", "success")
             return redirect(url_for("view_students"))
         except ValueError:
@@ -639,13 +703,19 @@ def edit_grade(student_id):
             self_evaluation = float(request.form.get("self_evaluation"))
             group_grade = float(request.form.get("group_grade"))
 
-            final_grade = (teacher_grade + self_evaluation + group_grade) / 3
+            final_grade = round((teacher_grade + self_evaluation + group_grade) / 3, 2)
+
             grade_entry.teacher_grade = teacher_grade
             grade_entry.self_evaluation = self_evaluation
             grade_entry.group_grade = group_grade
             grade_entry.final_grade = final_grade
             grade_entry.modified_by = current_user.full_name
             db.session.commit()
+            log_activity(
+                current_user,
+                "Edición de calificaciones",
+                f"Estudiante: {student.full_name}, Cohorte: {student.cohort.name}, Año: {student.cohort.year.name}, Nota final: {final_grade}",
+            )
             flash("Edición exitosa!.", "success")
             return redirect(url_for("view_students"))
         except ValueError:
@@ -745,6 +815,11 @@ def generate_report(teacher_id, year_id, cohort_id):
     doc.build(content)
 
     pdf_data = buffer.getvalue()
+    log_activity(
+        current_user,
+        "Generación de reporte PDF",
+        f"Reporte para el cohorte: {cohort.name} del año: {year.name}",
+    )
 
     response = make_response(pdf_data)
     response.headers["Content-Type"] = "application/pdf"
@@ -755,8 +830,23 @@ def generate_report(teacher_id, year_id, cohort_id):
 @app.route("/logout")
 @login_required
 def logout():
+    log_activity(current_user, "Cierre de sesión")
     logout_user()
     return redirect(url_for("login"))
+
+
+@app.route("/view_logs", methods=["GET"])
+@admin_required  # Asumiendo que solo los administradores pueden ver los logs
+def view_logs():
+    # Recuperar todos los logs de la base de datos
+    logs = (
+        db.session.query(ActivityLog, User.full_name)
+        .join(User, User.id == ActivityLog.user_id)
+        .order_by(ActivityLog.timestamp.desc())
+        .all()
+    )
+
+    return render_template("view_logs.html", logs=logs)
 
 
 @app.route("/create_db")
