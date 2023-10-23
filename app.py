@@ -34,6 +34,8 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from io import BytesIO
 from datetime import datetime
 
+from models import ActivityLog, BaseModel, Cohort, Grade, Profile, Student, Universidad, User, Year
+
 
 def current_time_in_bogota():
     local_tz = pytz.timezone("America/Bogota")
