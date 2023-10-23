@@ -99,6 +99,27 @@
     </nav>
     <br>
     <div class="container mt-4">
+        <form method="post" action="{{ url_for('view_logs') }}">
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="dateFilter">Filtrar por fecha:</label>
+                    <input type="date" id="dateFilter" name="dateFilter" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    <label for="teacherFilter">Filtrar por docente:</label>
+                    
+                    <select id="teacherFilter" name="teacherFilter" class="form-control">
+                        <option value="">Todos los docentes</option>
+                        {% for teacher in teachers %}
+                            <option value="{{ teacher.full_name }}">{{ teacher.full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary mt-4">Aplicar filtros</button>
+                </div>
+            </div>
+        </form>
         <h2>Registro de Actividades</h2>
 
         <table>

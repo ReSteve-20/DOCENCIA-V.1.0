@@ -835,18 +835,24 @@ def logout():
     return redirect(url_for("login"))
 
 
-@app.route("/view_logs", methods=["GET"])
+@app.route("/view_logs", methods=['GET', 'POST'])
 @admin_required  # Asumiendo que solo los administradores pueden ver los logs
+@login_required
 def view_logs():
-    # Recuperar todos los logs de la base de datos
-    logs = (
-        db.session.query(ActivityLog, User.full_name)
-        .join(User, User.id == ActivityLog.user_id)
-        .order_by(ActivityLog.timestamp.desc())
-        .all()
-    )
+    date_filter = request.form.get('dateFilter')
+    teacher_filter = request.form.get('teacherFilter')
 
-    return render_template("view_logs.html", logs=logs)
+    query = db.session.query(ActivityLog, User.full_name).join(User, User.id == ActivityLog.user_id)
+
+    if date_filter:
+        query = query.filter(ActivityLog.timestamp == date_filter)
+    if teacher_filter:
+        query = query.filter(User.full_name == teacher_filter)
+
+    logs = query.order_by(ActivityLog.timestamp.desc()).all()
+    teachers = User.query.all()
+
+    return render_template("view_logs.html", logs=logs, teachers=teachers)
 
 
 @app.route("/create_db")
