@@ -100,8 +100,10 @@
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                             <li><a class="dropdown-item" href="{{ url_for('register') }}">Registrar Docente</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('add_year') }}">Añadir año</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('add_year') }}">Añadir año.</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('add_universidad') }}">Añadir universidad</a>
+                            <li><a class="dropdown-item" href="{{ url_for('manage_teachers') }}">Gestionar Docentes</a>
+                            <li><a class="dropdown-item" href="{{ url_for('view_logs') }}">Ver Logs</a></li>
                             </li>
                         </ul>
                     </li>
@@ -174,6 +176,7 @@
                     <th scope="col">Estudiante</th>
                     <th scope="col">Nota final</th>
                     <th scope="col">Opciones</th>
+                    <th scope="col">Borrado</th>
                 </tr>
             </thead>
             <tbody>
@@ -201,17 +204,24 @@
                         <a href="{{ url_for('edit_student', student_id=student.id) }}"
                             class="btn btn-warning btn-sm">Editar
                             datos</a>
-                        | <form action="{{ url_for('inactive_student', student_id=student.id) }}" method="post" style="display: inline;">
+                    </td>
+                    <td>
+                        
+                        
+                        <form action="{{ url_for('inactive_student', student_id=student.id) }}" method="post"
+                            style="display: inline;">
                             {% if student.is_active %}
-                                <button type="submit" class="btn btn-warning btn-sm"
-                                    onclick="return confirm('¿Está seguro de que desea inactivar a este estudiante?');">Inactivar</button>
+                            <button type="submit" class="btn btn-danger btn-sm"
+                                onclick="return confirm('¿Está seguro de que desea inactivar a este estudiante?');">Inactivar</button>
                             {% else %}
-                                <button type="submit" class="btn btn-success btn-sm"
-                                    onclick="return confirm('¿Está seguro de que desea reactivar a este estudiante?');">Activar</button>
+                            <button type="submit" class="btn btn-success btn-sm"
+                                onclick="return confirm('¿Está seguro de que desea reactivar a este estudiante?');">Activar</button>
                             {% endif %}
                         </form>
+                        <form action="{{ url_for('clear_grades', student_id=student.id) }}" method="post" style="display: inline;">
+                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Está seguro de que desea eliminar las calificaciones de este estudiante?');">Eliminar Calificaciones</button>
+                        </form>
                         
-
                     </td>
                 </tr>
                 {% endfor %}
@@ -220,7 +230,9 @@
         <br>
         {% endif %}
         <a href="{{ url_for('dashboard') }}">Atrás</a>
+        
     </div>
+    
 
     <!-- Enlaces a los archivos JavaScript de Bootstrap -->
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>

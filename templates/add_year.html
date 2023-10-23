@@ -81,8 +81,10 @@
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                             <li><a class="dropdown-item" href="{{ url_for('register') }}">Registrar Docente</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('add_year') }}">Activar año</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('add_universidad') }}">Añadir universidad</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('add_year') }}">Añadir año.</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('add_universidad') }}">Añadir universidad</a>
+                            <li><a class="dropdown-item" href="{{ url_for('manage_teachers') }}">Gestionar Docentes</a>
+                            <li><a class="dropdown-item" href="{{ url_for('view_logs') }}">Ver Logs</a></li>
                         </ul>
                     </li>
                 </ul>

@@ -456,6 +456,10 @@ def view_students():
 @login_required
 def inactive_student(student_id):
     student = Student.query.get_or_404(student_id)
+    if student.grades:  # Usando el atributo 'grades' para verificar si hay notas asociadas
+        flash("No puedes inactivar a un estudiante con notas asociadas.", "danger")
+        return redirect(url_for("view_students"))
+
     student.is_active = not student.is_active
     student.modified_by = current_user.full_name
 
@@ -571,6 +575,32 @@ def edit_grade(student_id):
             flash("Notas inválidas!.", "danger")
 
     return render_template("edit_grade.html", student=student, grade=grade_entry)
+
+@app.route("/clear_grades/<int:student_id>", methods=["POST"])
+@login_required
+def clear_grades(student_id):
+    student = Student.query.get_or_404(student_id)
+    
+    # Verificar si el estudiante tiene calificaciones
+    grade_entry = Grade.query.filter_by(student_id=student_id).first()
+    
+    if not grade_entry:
+        flash("El estudiante no tiene calificaciones para eliminar.", "danger")
+        return redirect(url_for("view_students"))
+    
+    # Eliminar las calificaciones del estudiante
+    db.session.delete(grade_entry)
+    db.session.commit()
+    
+    log_activity(
+        current_user,
+        "Eliminación de calificaciones",
+        f"Calificaciones eliminadas para el estudiante: {student.full_name}, Cohorte: {student.cohort.name}, Año: {student.cohort.year.name}",
+    )
+    
+    flash("Calificaciones del estudiante eliminadas con éxito.", "success")
+    return redirect(url_for("view_students"))
+
 
 
 @app.route("/verify_password", methods=["POST"])
