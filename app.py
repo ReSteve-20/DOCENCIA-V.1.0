@@ -33,8 +33,27 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from io import BytesIO
 from datetime import datetime
-
 from models import ActivityLog, BaseModel, Cohort, Grade, Profile, Student, Universidad, User, Year, db
+
+import smtplib
+from email.message import EmailMessage
+
+def send_verification_code(destinatario, pin):
+    remitente = 'docentesrec@outlook.es'
+    mensaje = f'Tu PIN de verificación es: {pin}. ¡No pierdas este PIN!'
+
+    email = EmailMessage()
+    email["From"] = remitente
+    email["To"] = destinatario
+    email["Subject"] = 'PIN de Verificación'
+    email.set_content(mensaje)
+
+    smtp = smtplib.SMTP('smtp-mail.outlook.com', 587)
+    smtp.starttls()
+    smtp.login(remitente, "elsgvonvwhvpgdrs")
+    smtp.sendmail(remitente, destinatario, email.as_string())
+    smtp.quit()
+
 
 
 def current_time_in_bogota():
@@ -153,6 +172,7 @@ def register():
         direccion_residencia = request.form.get("direccion_residencia")
         profile_type = request.form.get("profile_type")
         pin_security = request.form.get("pin_security")
+        send_verification_code(email, pin_security)
 
         # Verificación adicional para el nuevo campo
         if not pin_security or len(pin_security) != 6 or not pin_security.isdigit():
@@ -836,4 +856,6 @@ def create_db():
 
 
 if __name__ == "__main__":
+    
     app.run(debug=True)
+    
