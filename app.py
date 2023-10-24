@@ -33,7 +33,7 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from io import BytesIO
 from datetime import datetime
-from models import ActivityLog, BaseModel, Cohort, Grade, Profile, Student, Universidad, User, Year, db
+from models import ActivityLog, BaseModel, Cohort, Grade, Profile, Student, Universidad, User, Year, Especializacion, db
 
 import smtplib
 from email.message import EmailMessage
@@ -359,13 +359,25 @@ def add_year():
 
     return render_template("add_year.html")
 
+@app.route('/add_specialization', methods=['POST'])
+def add_specialization():
+    if request.method == 'POST':
+        specialization_name = request.form['specialization_name']
+        new_specialization = Especializacion(name=specialization_name)
+        try:
+            db.session.add(new_specialization)
+            db.session.commit()
+            return redirect('/specializations')
+        except:
+            return 'Hubo un error al añadir la especialización'
+
 
 @app.route("/add_cohort", methods=["GET", "POST"])
 @login_required
 @login_required
 def add_cohort():
     if request.method == "POST":
-        name = request.form.get("name")
+        name = request.form.get("name") + " - R1"
         year_id = request.form.get("year_id")
         teacher_id = current_user.id
 
@@ -397,6 +409,7 @@ def add_cohort():
         Year.query.all()
     )  # Lista de años para que el usuario elija al crear un cohort
     return render_template("add_cohort.html", years=years)
+
 
 
 @app.route("/add_student", methods=["GET", "POST"])

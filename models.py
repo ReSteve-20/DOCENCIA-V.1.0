@@ -102,6 +102,7 @@ class Cohort(BaseModel):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
+    
 
     # Foreign Keys
     year_id = db.Column(db.Integer, db.ForeignKey("year.id"), nullable=False)
@@ -130,10 +131,12 @@ class Student(BaseModel):
     telefono = db.Column(db.String(20), nullable=True)  # New field
     direccion_residencia = db.Column(db.String(255), nullable=True)  # New field
     is_active = db.Column(db.Boolean, default=True)
+    
 
     universidad_id = db.Column(
         db.Integer, db.ForeignKey("universidad.id"), nullable=True
     )
+    especializacion_id = db.Column(db.Integer, db.ForeignKey("especializacion.id"), nullable=True)
 
     universidad = db.relationship("Universidad", back_populates="students")
 
@@ -145,6 +148,7 @@ class Student(BaseModel):
     grades = db.relationship(
         "Grade", back_populates="student", cascade="all, delete-orphan"
     )
+    especializacion = db.relationship("Especializacion", back_populates="students")
 
     def __repr__(self):
         return f"<Student {self.full_name}>"
@@ -167,3 +171,13 @@ class Grade(BaseModel):
 
     def __repr__(self):
         return f"<Grade {self.id} for Student {self.student_id}>"
+    
+
+class Especializacion(BaseModel):
+    __tablename__ = "especializacion"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False, unique=True)
+
+    # Relación inversa con Student
+    students = db.relationship("Student", back_populates="especializacion")    
