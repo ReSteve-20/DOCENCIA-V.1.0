@@ -327,8 +327,9 @@ def reset_password():
         # Actualizar la contraseña del usuario
         user.password = generate_password_hash(new_password, method='sha256')
         db.session.commit()
+        log_activity(user, "Recuperó contraseña")
         
-        flash('Contraseña actualizada con éxito.', 'success')
+        flash('Contraseña actualizada con éxito. Ya puede iniciar sesión', 'success')
         return redirect(url_for('login'))
     
     return render_template('reset_password.html')
