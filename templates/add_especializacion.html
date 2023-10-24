@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Especialización</title>
+
+    <!-- Enlaces a los archivos CSS de Bootstrap desde tu carpeta static -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+
+    <style>
+        body {
+            background: linear-gradient(to bottom, #1ca0f8, #fc91cf);
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        .form-container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .form-label {
+            font-size: 18px;
+            color: #333;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: none;
+            border-bottom: 1px solid #ccc;
+            border-radius: 0;
+            background-color: transparent;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-bottom: 2px solid #007bff;
+        }
+
+        .nav-custom-radius {
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="container mt-3">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+    <div class="container form-container">
+        <h2>Crear Especialización</h2>
+        <form action="{{ url_for('crear_especializacion') }}" method="post">
+            <label class="form-label" for="name">Nombre de la Especialización:</label>
+            <input class="form-input" type="text" name="name" required>
+
+            <input class="btn btn-primary" type="submit" value="Crear">
+        </form>
+        <a href="{{ url_for('dashboard') }}">Atrás</a>
+    </div>
+
+    <!-- Enlaces a los archivos JavaScript de Bootstrap desde tu carpeta static -->
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    
+</body>
+</html>

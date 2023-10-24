@@ -359,17 +359,28 @@ def add_year():
 
     return render_template("add_year.html")
 
-@app.route('/add_specialization', methods=['POST'])
-def add_specialization():
-    if request.method == 'POST':
-        specialization_name = request.form['specialization_name']
-        new_specialization = Especializacion(name=specialization_name)
-        try:
-            db.session.add(new_specialization)
+@app.route("/crear_especializacion", methods=["GET", "POST"])
+@admin_required
+@login_required
+def crear_especializacion():
+    if request.method == "POST":
+        name = request.form.get("name")
+        existing_especializacion = Especializacion.query.filter_by(name=name).first()
+        if existing_especializacion:
+            flash("Esta especialización ya existe!", "danger")
+        else:
+            new_especializacion = Especializacion(
+                name=name, created_by=current_user.full_name
+            )  # Utiliza el campo creado en BaseModel)
+            db.session.add(new_especializacion)
             db.session.commit()
-            return redirect('/specializations')
-        except:
-            return 'Hubo un error al añadir la especialización'
+            log_activity(
+                current_user, "Creación de especialización", f"Especialización: {name}"
+            )
+            flash("Especialización agregada con éxito!", "success")
+            return redirect(url_for("dashboard"))
+    return render_template("add_especializacion.html")
+
 
 
 @app.route("/add_cohort", methods=["GET", "POST"])
@@ -424,6 +435,7 @@ def add_student():
         telefono = request.form.get("telefono")
         direccion_residencia = request.form.get("direccion_residencia")
         cohort_id = request.form.get("cohort_id")
+        especializacion_id = request.form.get("especializacion_id")
 
         # Verifica si el número de identificación coincide con el del docente en sesión
         if identification == str(current_user.identificacion):
@@ -454,6 +466,7 @@ def add_student():
                 telefono=telefono,
                 direccion_residencia=direccion_residencia,
                 cohort_id=cohort_id,
+                especializacion_id=especializacion_id,
                 created_by=current_user.full_name,
             )
             db.session.add(new_student)
@@ -468,8 +481,9 @@ def add_student():
     universidades = Universidad.query.all()
     # Obtiene los cohortes creados por el docente actual
     cohorts = Cohort.query.filter_by(teacher_id=current_user.id).all()
+    especializaciones = Especializacion.query.all()  # Fetch specializations
     return render_template(
-        "add_student.html", cohorts=cohorts, universidades=universidades
+        "add_student.html", cohorts=cohorts, universidades=universidades, especializaciones=especializaciones
     )
 
 
@@ -497,6 +511,7 @@ def edit_student(student_id):
             student.telefono = request.form["telefono"]
             student.direccion_residencia = request.form["direccion_residencia"]
             student.cohort_id = request.form["cohort_id"]
+            student.especializacion_id = request.form["especializacion_id"]
 
             # 3. Actualizar metadatos
             student.modified_by = current_user.full_name
@@ -515,11 +530,13 @@ def edit_student(student_id):
     # 4. Renderizar la plantilla add_student.html con los datos existentes del estudiante
     universidades = Universidad.query.all()
     cohorts = Cohort.query.filter_by(teacher_id=current_user.id).all()
+    especializaciones = Especializacion.query.all()
     return render_template(
         "add_student.html",
         student=student,
         cohorts=cohorts,
         universidades=universidades,
+        especializaciones=especializaciones,
     )
 
 

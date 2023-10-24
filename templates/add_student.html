@@ -133,7 +133,19 @@
                         <input class="form-input" type="number" id="telefono" name="telefono"
                             value="{% if student %}{{student.telefono}}{% endif %}" required>
                     </div>
+                    <div class="form-group">
+                        <label class="form-label" for="especializacion_id">Especialización</label>
+                        <select class="form-input" id="especializacion_id" name="especializacion_id">
+                            <option value="" disabled selected>Selecciona una especialización</option>
+                            {% for especializacion in especializaciones %}
+                            <option value="{{ especializacion.id }}">{{ especializacion.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                 </div>
+                
+
+
                 <div class="form-column">
                     <!-- Campos de la segunda columna -->
                     <div class="form-group">
