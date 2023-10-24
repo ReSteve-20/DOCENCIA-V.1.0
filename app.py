@@ -40,7 +40,7 @@ from email.message import EmailMessage
 
 def send_verification_code(destinatario, pin):
     remitente = 'docentesrec@outlook.es'
-    mensaje = f'Tu PIN de verificación es: {pin}. ¡No pierdas este PIN!'
+    mensaje = f'Tu PIN de verificación es: {pin}. Guardalo en un lugar seguro. ¡No pierdas este PIN!'
 
     email = EmailMessage()
     email["From"] = remitente
