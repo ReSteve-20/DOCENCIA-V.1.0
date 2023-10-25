@@ -33,27 +33,40 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from io import BytesIO
 from datetime import datetime
-from models import ActivityLog, BaseModel, Cohort, Grade, Profile, Student, Universidad, User, Year, Especializacion, db
+from models import (
+    ActivityLog,
+    BaseModel,
+    Cohort,
+    Grade,
+    Profile,
+    Student,
+    Universidad,
+    User,
+    Year,
+    Especializacion,
+    StudentRotation,
+    db,
+)
 
 import smtplib
 from email.message import EmailMessage
 
+
 def send_verification_code(destinatario, pin):
-    remitente = 'docentesrec@outlook.es'
-    mensaje = f'Tu PIN de verificación es: {pin}. Guardalo en un lugar seguro. ¡No pierdas este PIN!'
+    remitente = "docentesrec@outlook.es"
+    mensaje = f"Tu PIN de verificación es: {pin}. Guardalo en un lugar seguro. ¡No pierdas este PIN!"
 
     email = EmailMessage()
     email["From"] = remitente
     email["To"] = destinatario
-    email["Subject"] = 'PIN de Verificación'
+    email["Subject"] = "PIN de Verificación"
     email.set_content(mensaje)
 
-    smtp = smtplib.SMTP('smtp-mail.outlook.com', 587)
+    smtp = smtplib.SMTP("smtp-mail.outlook.com", 587)
     smtp.starttls()
     smtp.login(remitente, "elsgvonvwhvpgdrs")
     smtp.sendmail(remitente, destinatario, email.as_string())
     smtp.quit()
-
 
 
 def current_time_in_bogota():
@@ -73,8 +86,6 @@ login_manager = LoginManager()
 login_manager.login_view = "login"
 login_manager.init_app(app)
 migrate = Migrate(app, db)
-
-
 
 
 def log_activity(user, activity_type, details=None):
@@ -177,7 +188,7 @@ def register():
         # Verificación adicional para el nuevo campo
         if not pin_security or len(pin_security) != 6 or not pin_security.isdigit():
             flash("El PIN de seguridad debe ser un número de 6 dígitos.", "danger")
-            return render_template("register.html")        
+            return render_template("register.html")
         if tipo_identificacion not in ["CC", "TI", "CE", "PA"]:
             flash("Tipo de identificación no válido.", "danger")
             return render_template("register.html")
@@ -204,9 +215,8 @@ def register():
                     telefono=telefono,
                     direccion_residencia=direccion_residencia,
                     profile=profile,
-                    pin_security=generate_password_hash(pin_security,method='sha256'),
+                    pin_security=generate_password_hash(pin_security, method="sha256"),
                     created_by=current_user.full_name,  # Utiliza el campo creado en BaseModel
-                    
                 )
                 db.session.add(new_user)
                 db.session.commit()
@@ -296,7 +306,9 @@ def change_password():
             flash("Las contraseñas nuevas no coinciden", "danger")
         else:
             # Update the user's password with the new one
-            current_user.password = generate_password_hash(new_password, method="sha256")
+            current_user.password = generate_password_hash(
+                new_password, method="sha256"
+            )
             db.session.commit()
             log_activity(current_user, "Cambio de contraseña")
 
@@ -305,34 +317,35 @@ def change_password():
 
     return render_template("change_password.html")
 
-@app.route('/reset_password', methods=['GET', 'POST'])
+
+@app.route("/reset_password", methods=["GET", "POST"])
 def reset_password():
-    if request.method == 'POST':
-        email = request.form.get('email')
-        pin = request.form.get('pin')
-        new_password = request.form.get('new_password')
-        
+    if request.method == "POST":
+        email = request.form.get("email")
+        pin = request.form.get("pin")
+        new_password = request.form.get("new_password")
+
         # Buscar el usuario por correo electrónico
         user = User.query.filter_by(email=email).first()
-        
+
         if not user:
-            flash('No existe un usuario con ese correo electrónico.', 'danger')
-            return redirect(url_for('reset_password'))
-        
+            flash("No existe un usuario con ese correo electrónico.", "danger")
+            return redirect(url_for("reset_password"))
+
         # Verificar si el PIN coincide
         if not check_password_hash(user.pin_security, pin):
-            flash('PIN incorrecto. Por favor, inténtalo de nuevo.', 'danger')
-            return redirect(url_for('reset_password'))
-        
+            flash("PIN incorrecto. Por favor, inténtalo de nuevo.", "danger")
+            return redirect(url_for("reset_password"))
+
         # Actualizar la contraseña del usuario
-        user.password = generate_password_hash(new_password, method='sha256')
+        user.password = generate_password_hash(new_password, method="sha256")
         db.session.commit()
         log_activity(user, "Recuperó contraseña")
-        
-        flash('Contraseña actualizada con éxito. Ya puede iniciar sesión', 'success')
-        return redirect(url_for('login'))
-    
-    return render_template('reset_password.html')
+
+        flash("Contraseña actualizada con éxito. Ya puede iniciar sesión", "success")
+        return redirect(url_for("login"))
+
+    return render_template("reset_password.html")
 
 
 @app.route("/add_year", methods=["GET", "POST"])
@@ -359,6 +372,7 @@ def add_year():
 
     return render_template("add_year.html")
 
+
 @app.route("/crear_especializacion", methods=["GET", "POST"])
 @admin_required
 @login_required
@@ -380,7 +394,6 @@ def crear_especializacion():
             flash("Especialización agregada con éxito!", "success")
             return redirect(url_for("dashboard"))
     return render_template("add_especializacion.html")
-
 
 
 @app.route("/add_cohort", methods=["GET", "POST"])
@@ -420,7 +433,6 @@ def add_cohort():
         Year.query.all()
     )  # Lista de años para que el usuario elija al crear un cohort
     return render_template("add_cohort.html", years=years)
-
 
 
 @app.route("/add_student", methods=["GET", "POST"])
@@ -483,7 +495,10 @@ def add_student():
     cohorts = Cohort.query.filter_by(teacher_id=current_user.id).all()
     especializaciones = Especializacion.query.all()  # Fetch specializations
     return render_template(
-        "add_student.html", cohorts=cohorts, universidades=universidades, especializaciones=especializaciones
+        "add_student.html",
+        cohorts=cohorts,
+        universidades=universidades,
+        especializaciones=especializaciones,
     )
 
 
@@ -562,11 +577,70 @@ def view_students():
     )
 
 
+@app.route("/select_rotation_students", methods=["GET", "POST"])
+@login_required
+def select_rotation_students():
+    cohorts = Cohort.query.filter_by(teacher_id=current_user.id).all()
+
+    if request.method == "POST":
+        cohort_id = request.form.get("cohort_id")
+        selected_students = request.form.getlist("student_selection")
+
+        # Crear la nueva rotación
+        original_cohort = Cohort.query.get(cohort_id)
+        rotation_number = int(original_cohort.name.split(" - R")[-1]) + 1
+        new_cohort_name = (
+            original_cohort.name.split(" - R")[0] + " - R" + str(rotation_number)
+        )
+
+        new_cohort = Cohort(
+            name=new_cohort_name,
+            teacher_id=current_user.id,
+            year_id=original_cohort.year_id,
+            created_by=current_user.full_name,
+        )
+        db.session.add(new_cohort)
+        db.session.commit()
+
+        # Asociar los estudiantes seleccionados al nuevo cohorte en la tabla de relación
+        for student_id in selected_students:
+            rotation = StudentRotation(
+                student_id=student_id,
+                cohort_id=new_cohort.id,
+                rotation_number=rotation_number,
+            )
+            db.session.add(rotation)
+
+        db.session.commit()
+
+        flash("Rotación creada con éxito!", "success")
+        return redirect(url_for("view_students"))
+
+    # Si es GET, mostramos la selección de estudiantes
+    cohort_id = request.args.get("cohort_id")
+    students = []
+    if cohort_id:
+        # Obtener las rotaciones para el cohorte específico
+        rotations = StudentRotation.query.filter_by(cohort_id=cohort_id).all()
+
+        # Obtener los estudiantes asociados a esas rotaciones
+        students = [rotation.student for rotation in rotations]
+
+    return render_template(
+        "select_rotation_students.html",
+        cohorts=cohorts,
+        students=students,
+        cohort_id=cohort_id,
+    )
+
+
 @app.route("/inactive_student/<int:student_id>", methods=["POST"])
 @login_required
 def inactive_student(student_id):
     student = Student.query.get_or_404(student_id)
-    if student.grades:  # Usando el atributo 'grades' para verificar si hay notas asociadas
+    if (
+        student.grades
+    ):  # Usando el atributo 'grades' para verificar si hay notas asociadas
         flash("No puedes inactivar a un estudiante con notas asociadas.", "danger")
         return redirect(url_for("view_students"))
 
@@ -686,31 +760,31 @@ def edit_grade(student_id):
 
     return render_template("edit_grade.html", student=student, grade=grade_entry)
 
+
 @app.route("/clear_grades/<int:student_id>", methods=["POST"])
 @login_required
 def clear_grades(student_id):
     student = Student.query.get_or_404(student_id)
-    
+
     # Verificar si el estudiante tiene calificaciones
     grade_entry = Grade.query.filter_by(student_id=student_id).first()
-    
+
     if not grade_entry:
         flash("El estudiante no tiene calificaciones para eliminar.", "danger")
         return redirect(url_for("view_students"))
-    
+
     # Eliminar las calificaciones del estudiante
     db.session.delete(grade_entry)
     db.session.commit()
-    
+
     log_activity(
         current_user,
         "Eliminación de calificaciones",
         f"Calificaciones eliminadas para el estudiante: {student.full_name}, Cohorte: {student.cohort.name}, Año: {student.cohort.year.name}",
     )
-    
+
     flash("Calificaciones del estudiante eliminadas con éxito.", "success")
     return redirect(url_for("view_students"))
-
 
 
 @app.route("/verify_password", methods=["POST"])
@@ -824,14 +898,16 @@ def logout():
     return redirect(url_for("login"))
 
 
-@app.route("/view_logs", methods=['GET', 'POST'])
+@app.route("/view_logs", methods=["GET", "POST"])
 @admin_required  # Asumiendo que solo los administradores pueden ver los logs
 @login_required
 def view_logs():
-    date_filter = request.form.get('dateFilter')
-    teacher_filter = request.form.get('teacherFilter')
+    date_filter = request.form.get("dateFilter")
+    teacher_filter = request.form.get("teacherFilter")
 
-    query = db.session.query(ActivityLog, User.full_name).join(User, User.id == ActivityLog.user_id)
+    query = db.session.query(ActivityLog, User.full_name).join(
+        User, User.id == ActivityLog.user_id
+    )
 
     if date_filter:
         query = query.filter(func.date(ActivityLog.timestamp) == date_filter)
@@ -887,6 +963,4 @@ def create_db():
 
 
 if __name__ == "__main__":
-    
     app.run(debug=True)
-    

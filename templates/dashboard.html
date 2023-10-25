@@ -120,13 +120,14 @@
 
         /* Estilo para el contenedor de los subcontenedores */
         /* Estilo para el contenedor principal de los subcontenedores */
-        .subcontainer-wrapper {
-            display: flex;
-            flex-direction: row;
-            max-width: 400px;
-            /* 4cm */
-            height: 250px;
-            /* 5cm */
+        .subcontainer-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            /* Dos columnas con igual ancho */
+            gap: 20px;
+            /* Espacio entre los subcontenedores */
+            max-width: 800px;
+            /* Ajusta el ancho máximo según tus necesidades */
             margin: 0 auto;
         }
 
@@ -137,39 +138,14 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
             cursor: pointer;
-            /* Cambia el cursor a mano al pasar por encima */
-            flex-basis: calc(25% - 20px);
-            /* Ajusta el tamaño de los subcontenedores */
+            flex-basis: calc(50% - 20px);
+            /* Ajusta el tamaño de los subcontenedores al 50% */
         }
 
         /* Estilo para el subcontenedor de Cohortes */
-        .subcontainer.cohortes {
-            width: 200px;
-            /* 2cm */
-            height: 250px;
-            /* 5cm */
-            background-color: #000000;
-            /* Cambiar el fondo a negro */
-            color: #fff;
-            /* Cambiar el color del texto a blanco */
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            flex-direction: column;
-            /* Cambio importante */
-            margin-right: 23px;
-        }
 
-        .subcontainer.cohortes:hover {
-            background-color: #f8bfe0;
-            width: 210px;
-            /* 2cm */
-            height: 260px;
-            /* 5cm */
-        }
+
+
 
         .subcontainer-group {
             display: flex;
@@ -230,6 +206,16 @@
         .nav-custom-radius {
             border-radius: 5px;
         }
+
+        .subcontainer-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .subcontainer-row:last-child {
+            margin-bottom: 0;
+        }
     </style>
 </head>
 
@@ -261,7 +247,8 @@
                             <li><a class="dropdown-item" href="{{ url_for('add_universidad') }}">Añadir universidad</a>
                             <li><a class="dropdown-item" href="{{ url_for('manage_teachers') }}">Gestionar Docentes</a>
                             <li><a class="dropdown-item" href="{{ url_for('view_logs') }}">Ver Logs</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('crear_especializacion') }}">Crear especializacion</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('crear_especializacion') }}">Crear
+                                    especializacion</a></li>
                         </ul>
                     </li>
                     <!-- Opción de Mi perfil -->
@@ -272,7 +259,8 @@
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                             <!-- Opciones del combobox. Puedes agregar o quitar según tus necesidades -->
-                            <li><a class="dropdown-item" href="{{ url_for('change_password') }}">Cambiar contraseña</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('change_password') }}">Cambiar contraseña</a>
+                            </li>
                         </ul>
                     </li>
                 </ul>
@@ -296,27 +284,33 @@
         <h1>¡Bienvenido, {{ user.full_name }}!</h1>
         <p>¿Qué quieres hacer hoy?</p>
 
-        <div class="subcontainer-wrapper">
-            <!-- Subcontenedor de Cohortes -->
-            <div class="subcontainer cohortes" onclick="location.href='{{ url_for('add_cohort') }}'">
-                <i class="fas fa-users"></i>
-                <h2>Crear Cohorte</h2>
+        <div class="subcontainer-grid">
+            <!-- Primera fila de subcontenedores -->
+            <div class="subcontainer-row">
+                <!-- Subcontenedor de Cohortes -->
+                <div class="subcontainer small" onclick="location.href='{{ url_for('add_cohort') }}'">
+                    <i class="fas fa-users"></i>
+                    <h2>Crear Cohorte</h2>
+                </div>
 
+                <!-- Subcontenedor de Rotaciones -->
+                <div class="subcontainer small" onclick="location.href='{{ url_for('select_rotation_students') }}'">
+                    <i class="fas fa-sync-alt"></i>
+                    <h2>Rotaciones</h2>
+                </div>
             </div>
 
-            <!-- Contenedor para Estudiantes y Calificaciones -->
-            <div class="subcontainer-group">
+            <!-- Segunda fila de subcontenedores -->
+            <div class="subcontainer-row">
                 <!-- Subcontenedor de Estudiantes -->
                 <div class="subcontainer small" onclick="location.href='{{ url_for('add_student') }}'">
                     <i class="fas fa-user-graduate"></i>
-
                     <h2>Inscribir Estudiantes</h2>
                 </div>
 
                 <!-- Subcontenedor de Calificaciones -->
                 <div class="subcontainer small" onclick="location.href='{{ url_for('view_students') }}'">
                     <i class="fas fa-star"></i>
-
                     <h2>Estudiantes y Calificaciones</h2>
                 </div>
             </div>

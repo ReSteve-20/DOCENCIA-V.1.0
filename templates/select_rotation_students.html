@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seleccionar Estudiantes para Rotación</title>
+    <style>
+        /* Puedes agregar estilos aquí si lo deseas */
+    </style>
+</head>
+<body>
+    <h1>Seleccionar Estudiantes para la Nueva Rotación</h1>
+
+    <!-- Seleccionar Cohorte -->
+    <form method="get" action="{{ url_for('select_rotation_students') }}">
+        <label for="cohort_selection">Selecciona un cohorte:</label>
+        <select name="cohort_id" id="cohort_selection">
+            {% for cohort in cohorts %}
+                <option value="{{ cohort.id }}">{{ cohort.name }}</option>
+            {% endfor %}
+        </select>
+        <input type="submit" value="Mostrar Estudiantes">
+    </form>
+
+    <br>
+
+    <!-- Seleccionar Estudiantes -->
+    {% if students %}
+    <form method="post">
+        <input type="hidden" name="cohort_id" value="{{ cohort_id }}">
+        <h3>Selecciona los estudiantes para la nueva rotación:</h3>
+        <ul>
+            {% for student in students %}
+                <li>
+                    <input type="checkbox" name="student_selection" value="{{ student.id }}">
+                    {{ student.full_name }}
+                </li>
+            {% endfor %}
+        </ul>
+        <input type="submit" value="Crear Rotación">
+    </form>
+    {% endif %}
+
+    <br>
+    <a href="{{ url_for('view_students') }}">Regresar a la lista de estudiantes</a>
+</body>
+</html>
