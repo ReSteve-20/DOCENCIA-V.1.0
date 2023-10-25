@@ -1,47 +1,154 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Seleccionar Estudiantes para Rotación</title>
     <style>
-        /* Puedes agregar estilos aquí si lo deseas */
+        body {
+            background: linear-gradient(to bottom, #1ca0f8, #fc91cf);
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        label,
+        h3 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        form {
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        select,
+        ul {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        li {
+            list-style-type: none;
+            margin-bottom: 10px;
+        }
+
+        input[type="submit"] {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+
+        a {
+            color: #007BFF;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        .alert-success {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .alert-danger {
+            background-color: #ff3333;
+            color: white;
+        }
+
+        .alert-info {
+            background-color: #007BFF;
+            color: white;
+        }
     </style>
 </head>
+
 <body>
-    <h1>Seleccionar Estudiantes para la Nueva Rotación</h1>
 
-    <!-- Seleccionar Cohorte -->
-    <form method="get" action="{{ url_for('select_rotation_students') }}">
-        <label for="cohort_selection">Selecciona un cohorte:</label>
-        <select name="cohort_id" id="cohort_selection">
-            {% for cohort in cohorts %}
-                <option value="{{ cohort.id }}">{{ cohort.name }}</option>
+    <div class="container">
+
+        <h1>Seleccionar Estudiantes para la Nueva Rotación</h1>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="container mt-3">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+                {{ message }}
+            </div>
             {% endfor %}
-        </select>
-        <input type="submit" value="Mostrar Estudiantes">
-    </form>
+        </div>
+        {% endif %}
+        {% endwith %}
 
-    <br>
+        <!-- Seleccionar Cohorte -->
+        <form method="get" action="{{ url_for('select_rotation_students') }}">
+            <label for="cohort_selection">Selecciona un cohorte:</label>
+            <select name="cohort_id" id="cohort_selection">
+                {% for cohort in cohorts %}
+                <option value="{{ cohort.id }}">{{ cohort.name }}</option>
+                {% endfor %}
+            </select>
+            <br><br>
+            <input type="submit" value="Mostrar Estudiantes">
+        </form>
 
-    <!-- Seleccionar Estudiantes -->
-    {% if students %}
-    <form method="post">
-        <input type="hidden" name="cohort_id" value="{{ cohort_id }}">
-        <h3>Selecciona los estudiantes para la nueva rotación:</h3>
-        <ul>
-            {% for student in students %}
+        <br>
+
+        <!-- Seleccionar Estudiantes -->
+        {% if students %}
+        <form method="post">
+            <input type="hidden" name="cohort_id" value="{{ cohort_id }}">
+            <h3>Selecciona los estudiantes para la nueva rotación:</h3>
+            <ul>
+                {% for student in students %}
                 <li>
                     <input type="checkbox" name="student_selection" value="{{ student.id }}">
                     {{ student.full_name }}
                 </li>
-            {% endfor %}
-        </ul>
-        <input type="submit" value="Crear Rotación">
-    </form>
-    {% endif %}
+                {% endfor %}
+            </ul>
+            <input type="submit" value="Crear Rotación">
+        </form>
+        {% endif %}
 
-    <br>
-    <a href="{{ url_for('view_students') }}">Regresar a la lista de estudiantes</a>
+        <br>
+        <a href="{{ url_for('view_students') }}">Regresar a la lista de estudiantes</a>
+    </div>
 </body>
+
 </html>

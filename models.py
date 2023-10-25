@@ -180,15 +180,4 @@ class Especializacion(BaseModel):
     name = db.Column(db.String(255), nullable=False, unique=True)
 
     # Relación inversa con Student
-    students = db.relationship("Student", back_populates="especializacion")
-
-class StudentRotation(db.Model):
-    __tablename__ = 'student_rotations'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    student_id = db.Column(db.Integer, db.ForeignKey('student.id'), nullable=False)
-    cohort_id = db.Column(db.Integer, db.ForeignKey('cohort.id'), nullable=False)
-    rotation_number = db.Column(db.Integer, nullable=False)
-
-    student = db.relationship('Student', backref=db.backref('rotations', lazy=True))
-    cohort = db.relationship('Cohort', backref=db.backref('student_rotations', lazy=True))
+    students = db.relationship("Student", back_populates="especializacion")    

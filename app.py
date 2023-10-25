@@ -44,7 +44,6 @@ from models import (
     User,
     Year,
     Especializacion,
-    StudentRotation,
     db,
 )
 
@@ -589,27 +588,34 @@ def select_rotation_students():
         # Crear la nueva rotación
         original_cohort = Cohort.query.get(cohort_id)
         rotation_number = int(original_cohort.name.split(" - R")[-1]) + 1
-        new_cohort_name = (
-            original_cohort.name.split(" - R")[0] + " - R" + str(rotation_number)
-        )
+        new_cohort_name = original_cohort.name.split(" - R")[0] + " - R" + str(rotation_number)
 
-        new_cohort = Cohort(
-            name=new_cohort_name,
-            teacher_id=current_user.id,
-            year_id=original_cohort.year_id,
-            created_by=current_user.full_name,
-        )
+        # Verificar si ya existe un cohorte con el nombre de la próxima rotación
+        existing_cohort = Cohort.query.filter_by(name=new_cohort_name).first()
+        if existing_cohort:
+            flash(f"La rotación {new_cohort_name} ya existe.", "danger")
+            return redirect(url_for("select_rotation_students"))
+
+        new_cohort = Cohort(name=new_cohort_name, teacher_id=current_user.id, year_id=original_cohort.year_id)
         db.session.add(new_cohort)
         db.session.commit()
 
-        # Asociar los estudiantes seleccionados al nuevo cohorte en la tabla de relación
+        # Asociar los estudiantes seleccionados al nuevo cohorte
         for student_id in selected_students:
-            rotation = StudentRotation(
-                student_id=student_id,
-                cohort_id=new_cohort.id,
-                rotation_number=rotation_number,
+            original_student = Student.query.get(student_id)
+            cloned_student = Student(
+                identification=f"{original_student.identification}-R{rotation_number}",
+                tipo_identificacion=original_student.tipo_identificacion,
+                full_name=original_student.full_name,
+                sexo=original_student.sexo,
+                telefono=original_student.telefono,
+                direccion_residencia=original_student.direccion_residencia,
+                is_active=original_student.is_active,
+                universidad_id=original_student.universidad_id,
+                especializacion_id=original_student.especializacion_id,
+                cohort_id=new_cohort.id
             )
-            db.session.add(rotation)
+            db.session.add(cloned_student)
 
         db.session.commit()
 
@@ -620,18 +626,10 @@ def select_rotation_students():
     cohort_id = request.args.get("cohort_id")
     students = []
     if cohort_id:
-        # Obtener las rotaciones para el cohorte específico
-        rotations = StudentRotation.query.filter_by(cohort_id=cohort_id).all()
+        students = Student.query.filter_by(cohort_id=cohort_id).all()
 
-        # Obtener los estudiantes asociados a esas rotaciones
-        students = [rotation.student for rotation in rotations]
+    return render_template("select_rotation_students.html", cohorts=cohorts, students=students, cohort_id=cohort_id)
 
-    return render_template(
-        "select_rotation_students.html",
-        cohorts=cohorts,
-        students=students,
-        cohort_id=cohort_id,
-    )
 
 
 @app.route("/inactive_student/<int:student_id>", methods=["POST"])

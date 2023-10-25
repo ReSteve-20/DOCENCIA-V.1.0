@@ -184,7 +184,7 @@
                 {% for student in students %}
                 {% if student.is_active %}
                 <tr>
-                    <td>{{ student.identification }}</td>
+                    <td>{{ student.identification.split('-R')[0] }}</td>
                     <td>{{ student.full_name }}</td>
                     <td>
                         {% if student.grades and student.grades[0].final_grade %}
