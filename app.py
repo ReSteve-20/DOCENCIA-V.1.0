@@ -618,6 +618,11 @@ def select_rotation_students():
             db.session.add(cloned_student)
 
         db.session.commit()
+        log_activity(
+        current_user,
+        f"Rotación creada",
+        f"Cohorte: {new_cohort_name}",
+    )
 
         flash("Rotación creada con éxito!", "success")
         return redirect(url_for("view_students"))
