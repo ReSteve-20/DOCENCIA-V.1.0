@@ -65,6 +65,7 @@ class User(BaseModel, UserMixin):
 
     cohorts = db.relationship("Cohort", back_populates="teacher")
     profile = db.relationship("Profile", back_populates="users")
+    especializacion = db.relationship("Especializacion", back_populates="teacher")
 
     @property
     def is_admin(self):
@@ -127,28 +128,29 @@ class Student(BaseModel):
     tipo_identificacion = db.Column(db.String(2), nullable=False)  # Nuevo campo
     full_name = db.Column(db.String(50), nullable=False)
     sexo = db.Column(db.String(10), nullable=False)  # New field
-    # New field for students only
+    email = db.Column(db.String(100), nullable=False, unique=True)
     telefono = db.Column(db.String(20), nullable=True)  # New field
     direccion_residencia = db.Column(db.String(255), nullable=True)  # New field
+    password = db.Column(db.String(255), nullable=False)
     is_active = db.Column(db.Boolean, default=True)
     
 
     universidad_id = db.Column(
         db.Integer, db.ForeignKey("universidad.id"), nullable=True
     )
-    especializacion_id = db.Column(db.Integer, db.ForeignKey("especializacion.id"), nullable=True)
+    
 
     universidad = db.relationship("Universidad", back_populates="students")
 
     # Foreign Keys
-    cohort_id = db.Column(db.Integer, db.ForeignKey("cohort.id"), nullable=False)
+    cohort_id = db.Column(db.Integer, db.ForeignKey("cohort.id"), nullable=True)
 
     # Relationships
     cohort = db.relationship("Cohort", back_populates="students")
     grades = db.relationship(
         "Grade", back_populates="student", cascade="all, delete-orphan"
     )
-    especializacion = db.relationship("Especializacion", back_populates="students")
+    
 
     def __repr__(self):
         return f"<Student {self.full_name}>"
@@ -178,6 +180,8 @@ class Especializacion(BaseModel):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable=False, unique=True)
+    teacher_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    teacher = db.relationship("User", back_populates="especializacion")
 
     # Relación inversa con Student
-    students = db.relationship("Student", back_populates="especializacion")    
+        

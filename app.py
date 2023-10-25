@@ -441,12 +441,17 @@ def add_student():
         identification = request.form.get("identification")
         tipo_identificacion = request.form.get("tipo_identificacion")  # Nuevo campo
         full_name = request.form.get("full_name").upper()
+        email = request.form.get("email")
         sexo = request.form.get("sexo")
         universidad_id = request.form.get("universidad_id")
         telefono = request.form.get("telefono")
         direccion_residencia = request.form.get("direccion_residencia")
-        cohort_id = request.form.get("cohort_id")
-        especializacion_id = request.form.get("especializacion_id")
+        
+        # Recuperar la contraseña del formulario
+        password = request.form.get("password")
+        
+        # Hashear la contraseña
+        hashed_password = generate_password_hash(password)
 
         # Verifica si el número de identificación coincide con el del docente en sesión
         if identification == str(current_user.identificacion):
@@ -463,21 +468,22 @@ def add_student():
 
         # Verifica si el estudiante ya está inscrito en el cohorte especificado
         existing_student = Student.query.filter_by(
-            identification=identification, cohort_id=cohort_id
+            identification=identification,
         ).first()
         if existing_student:
-            flash("El estudiante ya existe en este cohorte!!", "danger")
+            flash("El estudiante ya existe!!", "danger")
         else:
             new_student = Student(
                 tipo_identificacion=tipo_identificacion,
                 identification=identification,
                 full_name=full_name,
                 sexo=sexo,
+                email=email,
                 universidad_id=universidad_id,
                 telefono=telefono,
                 direccion_residencia=direccion_residencia,
-                cohort_id=cohort_id,
-                especializacion_id=especializacion_id,
+                cohort_id="null",
+                password=hashed_password,
                 created_by=current_user.full_name,
             )
             db.session.add(new_student)
