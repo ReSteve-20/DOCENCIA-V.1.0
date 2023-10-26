@@ -43,7 +43,6 @@ from models import (
     Universidad,
     User,
     Year,
-    Especializacion,
     db,
 )
 
@@ -116,16 +115,9 @@ def login():
     if request.method == "POST":
         email = request.form.get("email")
         password = request.form.get("password")
-        
-        # Primero verifica si el email pertenece a un estudiante
-        student = Student.query.filter_by(email=email).first()
-        if student and check_password_hash(student.password, password):
-            login_user(student)
-            log_activity(student, "Inicio de sesión de estudiante")
-            return redirect(url_for("student_dashboard"))
-
-        # Luego verifica si el email pertenece a un usuario (docente o administrador)
         user = User.query.filter_by(email=email).first()
+
+        # Verifica si el usuario existe y si la contraseña es correcta
         if user and check_password_hash(user.password, password):
             # Si el usuario está desactivado, muestra un mensaje y redirige al login
             if not user.is_active:
@@ -134,17 +126,10 @@ def login():
                 )
                 return redirect(url_for("login"))
 
-            # Si es administrador, redirige al dashboard de administrador
-            if user.is_admin:
-                login_user(user)
-                log_activity(user, "Inicio de sesión de administrador")
-                return redirect(url_for("dashboard"))
-            
-            # Si es docente, redirige al dashboard de docente
-            else:
-                login_user(user)
-                log_activity(user, "Inicio de sesión de docente")
-                return redirect(url_for("teacher_dashboard"))
+            # Si todo está bien, inicia sesión y redirige al dashboard
+            login_user(user)
+            log_activity(user, "Inicio de sesión")
+            return redirect(url_for("dashboard"))
         else:
             flash("Usuario o contraseña incorrectos", "danger")
 
@@ -152,22 +137,10 @@ def login():
     return render_template("login.html")
 
 
-
 @app.route("/dashboard")
 @login_required
 def dashboard():
     return render_template("dashboard.html", user=current_user)
-
-
-@app.route("/teacher_dashboard")
-@login_required
-def teacher_dashboard():
-    return render_template("teacher_dashboard.html", user=current_user)
-
-@app.route("/student_dashboard")
-@login_required
-def student_dashboard():
-    return render_template("student_dashboard.html", student=current_user)
 
 
 @app.route("/add_universidad", methods=["GET", "POST"])
@@ -398,38 +371,16 @@ def add_year():
     return render_template("add_year.html")
 
 
-@app.route("/crear_especializacion", methods=["GET", "POST"])
-@admin_required
-@login_required
-def crear_especializacion():
-    if request.method == "POST":
-        name = request.form.get("name")
-        existing_especializacion = Especializacion.query.filter_by(name=name).first()
-        if existing_especializacion:
-            flash("Esta especialización ya existe!", "danger")
-        else:
-            new_especializacion = Especializacion(
-                name=name, created_by=current_user.full_name
-            )  # Utiliza el campo creado en BaseModel)
-            db.session.add(new_especializacion)
-            db.session.commit()
-            log_activity(
-                current_user, "Creación de especialización", f"Especialización: {name}"
-            )
-            flash("Especialización agregada con éxito!", "success")
-            return redirect(url_for("dashboard"))
-    return render_template("add_especializacion.html")
-
 
 
 @app.route("/add_cohort", methods=["GET", "POST"])
 @login_required
-@admin_required
+@login_required
 def add_cohort():
     if request.method == "POST":
         name = request.form.get("name") + " - R1"
         year_id = request.form.get("year_id")
-        teacher_id = request.form.get("teacher_id")  # Recuperar el teacher_id del formulario
+        teacher_id = current_user.id
 
         # Comprobar si el cohort ya existe para este docente en particular
         existing_cohort = Cohort.query.filter_by(
@@ -442,25 +393,23 @@ def add_cohort():
                 name=name,
                 year_id=year_id,
                 teacher_id=teacher_id,
-                created_by=current_user.id,
+                created_by=current_user.full_name,
             )
             db.session.add(new_cohort)
             db.session.commit()
             year_name = Year.query.get(year_id).name
-            teacher_name=User.query.get(teacher_id).full_name
             log_activity(
                 current_user,
                 "Creación de cohorte",
-                f"Cohorte: {name}, Año: {year_name}, Docente: {teacher_name}",
+                f"Cohorte: {name}, Año: {year_name}",
             )
             flash("Cohorte añadido correctamente!.", "success")
             return redirect(url_for("dashboard"))
 
-    years = Year.query.all()  # Lista de años para que el usuario elija al crear un cohort
-    current_admin = User.query.get(current_user.id)
-    teachers = User.query.filter((User.profile_id == 2) | (User.id == current_admin.id)).all()
-    return render_template("add_cohort.html", years=years, teachers=teachers)
-
+    years = (
+        Year.query.all()
+    )  # Lista de años para que el usuario elija al crear un cohort
+    return render_template("add_cohort.html", years=years)
 
 
 @app.route("/add_student", methods=["GET", "POST"])
@@ -470,18 +419,16 @@ def add_student():
         identification = request.form.get("identification")
         tipo_identificacion = request.form.get("tipo_identificacion")  # Nuevo campo
         full_name = request.form.get("full_name").upper()
-        email = request.form.get("email")
+       
         sexo = request.form.get("sexo")
         universidad_id = request.form.get("universidad_id")
         telefono = request.form.get("telefono")
         direccion_residencia = request.form.get("direccion_residencia")
-        cohort_id=request.form.get("cohort_id")
         
-        # Recuperar la contraseña del formulario
-        password = request.form.get("password")
+       
         
         # Hashear la contraseña
-        hashed_password = generate_password_hash(password)
+        
 
         # Verifica si el número de identificación coincide con el del docente en sesión
         if identification == str(current_user.identificacion):
@@ -508,12 +455,12 @@ def add_student():
                 identification=identification,
                 full_name=full_name,
                 sexo=sexo,
+                
                 universidad_id=universidad_id,
                 telefono=telefono,
-                email=email,
                 direccion_residencia=direccion_residencia,
-                cohort_id=cohort_id,
-                password=hashed_password,
+                cohort_id="null",
+                
                 created_by=current_user.full_name,
             )
             db.session.add(new_student)
@@ -527,18 +474,17 @@ def add_student():
             return redirect(url_for("dashboard"))
     universidades = Universidad.query.all()
     # Obtiene los cohortes creados por el docente actual
-    cohorts = Cohort.query.all()
+    cohorts = Cohort.query.filter_by(teacher_id=current_user.id).all()
+    
     return render_template(
         "add_student.html",
         cohorts=cohorts,
-        universidades=universidades,
+        universidades=universidades
         
     )
 
 
 @app.route("/edit_student/<int:student_id>", methods=["GET", "POST"])
-@login_required
-@admin_required
 def edit_student(student_id):
     # 1. Recuperar los datos del estudiante usando student_id
     student = Student.query.get_or_404(student_id)
@@ -562,6 +508,7 @@ def edit_student(student_id):
             student.telefono = request.form["telefono"]
             student.direccion_residencia = request.form["direccion_residencia"]
             student.cohort_id = request.form["cohort_id"]
+            
 
             # 3. Actualizar metadatos
             student.modified_by = current_user.full_name
@@ -579,53 +526,46 @@ def edit_student(student_id):
 
     # 4. Renderizar la plantilla add_student.html con los datos existentes del estudiante
     universidades = Universidad.query.all()
-    cohorts = Cohort.query.all()  # Obtiene todos los cohortes disponibles
+    cohorts = Cohort.query.filter_by(teacher_id=current_user.id).all()
+    
     return render_template(
         "add_student.html",
         student=student,
         cohorts=cohorts,
         universidades=universidades,
+        
     )
-
 
 
 @app.route("/view_students", methods=["GET", "POST"])
 @login_required
 def view_students():
-    teacher = None
     if request.method == "POST":
         cohort_id = request.form.get("cohort_id")
         students = Student.query.filter_by(cohort_id=cohort_id).all()
         selected_cohort = Cohort.query.get(cohort_id)
-        # Obtener el docente asociado al cohorte seleccionado
-        teacher = User.query.get(selected_cohort.teacher_id) if selected_cohort else None
     else:
         students = []
         selected_cohort = None
 
     # Obtener todos los cohortes y años creados por el docente actual
-    cohorts = Cohort.query.all()
+    cohorts = Cohort.query.filter_by(teacher_id=current_user.id).all()
 
     return render_template(
         "view_students.html",
         cohorts=cohorts,
         students=students,
         selected_cohort=selected_cohort,
-        teacher=teacher  # Pasar el docente al frontend
     )
 
 
 @app.route("/select_rotation_students", methods=["GET", "POST"])
 @login_required
-@admin_required
 def select_rotation_students():
-    current_admin = User.query.get(current_user.id)
-    cohorts = Cohort.query.all()
-    teachers = User.query.filter_by((User.profile_id == 2) | (User.id == current_admin.id)).all()
+    cohorts = Cohort.query.filter_by(teacher_id=current_user.id).all()
 
     if request.method == "POST":
         cohort_id = request.form.get("cohort_id")
-        teacher_id = request.form.get("teacher_id")  # Recuperar el teacher_id del formulario
         selected_students = request.form.getlist("student_selection")
 
         # Crear la nueva rotación
@@ -639,7 +579,7 @@ def select_rotation_students():
             flash(f"La rotación {new_cohort_name} ya existe.", "danger")
             return redirect(url_for("select_rotation_students"))
 
-        new_cohort = Cohort(name=new_cohort_name, teacher_id=teacher_id, year_id=original_cohort.year_id)
+        new_cohort = Cohort(name=new_cohort_name, teacher_id=current_user.id, year_id=original_cohort.year_id)
         db.session.add(new_cohort)
         db.session.commit()
 
@@ -675,7 +615,7 @@ def select_rotation_students():
     if cohort_id:
         students = Student.query.filter_by(cohort_id=cohort_id).all()
 
-    return render_template("select_rotation_students.html", cohorts=cohorts, students=students, cohort_id=cohort_id, teachers=teachers)
+    return render_template("select_rotation_students.html", cohorts=cohorts, students=students, cohort_id=cohort_id)
 
 
 

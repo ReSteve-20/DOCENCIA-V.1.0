@@ -65,7 +65,7 @@ class User(BaseModel, UserMixin):
 
     cohorts = db.relationship("Cohort", back_populates="teacher")
     profile = db.relationship("Profile", back_populates="users")
-    especializacion = db.relationship("Especializacion", back_populates="teacher")
+    
 
     @property
     def is_admin(self):
@@ -128,10 +128,8 @@ class Student(BaseModel):
     tipo_identificacion = db.Column(db.String(2), nullable=False)  # Nuevo campo
     full_name = db.Column(db.String(50), nullable=False)
     sexo = db.Column(db.String(10), nullable=False)  # New field
-    email = db.Column(db.String(100), nullable=False, unique=True)
     telefono = db.Column(db.String(20), nullable=True)  # New field
     direccion_residencia = db.Column(db.String(255), nullable=True)  # New field
-    password = db.Column(db.String(255), nullable=False)
     is_active = db.Column(db.Boolean, default=True)
     
 
@@ -175,13 +173,5 @@ class Grade(BaseModel):
         return f"<Grade {self.id} for Student {self.student_id}>"
     
 
-class Especializacion(BaseModel):
-    __tablename__ = "especializacion"
 
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255), nullable=False, unique=True)
-    teacher_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    teacher = db.relationship("User", back_populates="especializacion")
-
-    # Relación inversa con Student
         

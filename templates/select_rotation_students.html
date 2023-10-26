@@ -119,7 +119,6 @@
 
         <!-- Seleccionar Cohorte -->
         <form method="get" action="{{ url_for('select_rotation_students') }}">
-            
             <label for="cohort_selection">Selecciona un cohorte:</label>
             <select name="cohort_id" id="cohort_selection">
                 {% for cohort in cohorts %}

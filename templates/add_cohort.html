@@ -101,8 +101,7 @@
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                             <!-- Opciones del combobox. Puedes agregar o quitar según tus necesidades -->
-                            <li><a class="dropdown-item" href="{{ url_for('change_password') }}">Cambiar contraseña</a>
-                            </li>
+                            <li><a class="dropdown-item" href="{{ url_for('change_password') }}">Cambiar contraseña</a></li>
                         </ul>
                     </li>
                 </ul>
@@ -137,14 +136,6 @@
                 {% endfor %}
             </select>
 
-            <label class="form-label" for="teacher_id">Asignar docente:</label>
-            <select class="form-input" name="teacher_id" required>
-                <option value="0">--Seleccione--</option>
-                {% for teacher in teachers %}
-                <option value="{{ teacher.id }}">{{ teacher.full_name }}</option>
-                {% endfor %}
-            </select>
-
             <input class="btn btn-primary" type="submit" value="Crear">
         </form>
         <a href="{{ url_for('dashboard') }}">Atrás</a>
@@ -153,19 +144,15 @@
     <!-- Enlaces a los archivos JavaScript de Bootstrap desde tu carpeta static -->
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            var form = document.querySelector("form");
+        document.addEventListener("DOMContentLoaded", function () {  // Espera a que el documento esté completamente cargado
+            var form = document.querySelector("form");  // Selecciona el formulario
 
-            form.addEventListener("submit", function (event) {
-                var yearSelect = document.querySelector("select[name='year_id']");
-                var teacherSelect = document.querySelector("select[name='teacher_id']");
+            form.addEventListener("submit", function (event) {  // Escucha el evento 'submit' del formulario
+                var yearSelect = document.querySelector("select[name='year_id']");  // Selecciona el combobox
 
-                if (yearSelect.value === "0") {
-                    event.preventDefault();
-                    alert("Por favor, seleccione un año.");
-                } else if (teacherSelect.value === "0") {
-                    event.preventDefault();
-                    alert("Por favor, seleccione un docente.");
+                if (yearSelect.value === "0") {  // Si el valor del combobox es "0" (la opción "--Seleccione--")
+                    event.preventDefault();  // Previene la acción por defecto (enviar el formulario)
+                    alert("Por favor, seleccione un año.");  // Muestra un mensaje al usuario
                 }
             });
         });
