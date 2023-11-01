@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROTACIONES</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <style>
+        body {
+            background: linear-gradient(to bottom, #1ca0f8, #fc91cf);
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .container-custom {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            margin: 20px auto;
+        }
+        .form-label {
+            font-size: 18px;
+            color: #333;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .btn-custom {
+            background-color: #007bff;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+    
+    
+    <div class="container-custom">
+        <h2>Crear Rotación</h2>
+        <form method="post">
+            <!-- Seleccionar Cohorte -->
+            <div class="mb-3">
+                <label class="form-label" for="cohort_id">Cohorte:</label>
+                <select class="form-control" id="cohortSelect" name="cohort_id" required>
+                    <option value="0">--Seleccione--</option>
+                    {% for cohort in cohorts %}
+                    <option value="{{ cohort.id }}">{{ cohort.year.name }} - {{ cohort.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- Seleccionar Docente -->
+            <div class="mb-3">
+                <label class="form-label" for="teacher_id">Docente:</label>
+                <select class="form-control" name="teacher_id" required>
+                    <option value="0">--Seleccione--</option>
+                    {% for teacher in teachers %}
+                    <option value="{{ teacher.id }}">{{ teacher.full_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3" id="studentsContainer"></div>
+            <div class="mb-3">
+                <label class="form-label" for="numero_rotacion">Número de Rotación:</label>
+                <input class="form-control" type="number" name="numero_rotacion" required>
+            </div>
+            <button class="btn-custom" type="submit">Crear Rotación</button><br>
+            <a href="{{url_for('admin_dashboard')}}">Atrás</a>
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $('#cohortSelect').change(function () {
+            var cohortId = $(this).val();
+            $.get('/get_students_by_cohort/' + cohortId, function (data) {
+                $('#studentsContainer').html(data);
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -94,7 +94,7 @@
         <h2>{% if student %}Editar estudiante: {{student.full_name}}{% else %}Registrar estudiante{% endif %}</h2>
 
         <form
-            action="{{ url_for('edit_student' if student else 'add_student', student_id=student.id if student else None) }}"
+            action="{{ url_for('edit_student' if student else 'register_student', student_id=student.id if student else None) }}"
             method="post">
             <div class="form-columns">
                 <div class="form-column">
@@ -145,10 +145,10 @@
                     <div class="form-group">
                         <label class="form-label" for="name">Identificacion:</label>
                         {% if student %}
-                        <input class="form-input" type="number" id="identification" name="identification"
+                        <input class="form-input" type="number" id="identificacion" name="identificacion"
                             value="{{student.identification}}" readonly required>
                         {% else %}
-                        <input class="form-input" type="number" id="identification" name="identification" required>
+                        <input class="form-input" type="number" id="identificacion" name="identificacion" required>
                         {% endif %}
 
                     </div>
@@ -169,12 +169,16 @@
                     </div>
                     <label class="form-label" for="email">Correo Electrónico:</label>
                     <input class="form-input" type="email" name="email" required>
+
+                    <label class="form-label" for="confirm_pin_security">PIN de Seguridad:</label>
+                    <input class="form-input" type="number" name="pin_security" id="pin_security"
+                        placeholder="GUARDA ESTE PIN" required>
                     
                 </div>
             </div>
             <button type="submit" class="btn btn-primary">{% if student %}Actualizar{% else %}Crear{% endif
                 %}</button><br>
-            <a href="{{ url_for('dashboard') }}">Atrás</a>
+            <a href="{{ url_for('admin_dashboard') }}">Atrás</a>
         </form>
     </div>
 

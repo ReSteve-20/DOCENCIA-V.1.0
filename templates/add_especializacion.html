@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>COHORTES</title>
+    <title>UNIVERSIDADES</title>
 
     <!-- Enlaces a los archivos CSS de Bootstrap desde tu carpeta static -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
@@ -101,7 +101,8 @@
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                             <!-- Opciones del combobox. Puedes agregar o quitar según tus necesidades -->
-                            <li><a class="dropdown-item" href="{{ url_for('change_password') }}">Cambiar contraseña</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('change_password') }}">Cambiar contraseña</a>
+                            </li>
                         </ul>
                     </li>
                 </ul>
@@ -123,18 +124,11 @@
     {% endif %}
     {% endwith %}
     <div class="container form-container">
-        <h2>Crear cohorte</h2>
-        <form action="{{ url_for('add_cohort') }}" method="post">
-            <label class="form-label" for="name">Nombre cohorte:</label>
-            <input class="form-input" type="text" name="name" required>
+        <h2>Añadir especializacion</h2>
+        <form action="{{ url_for('add_especializacion') }}" method="post">
+            <label class="form-label" for="nombre">Nombre especializacion:</label>
+            <input class="form-input" type="text" name="nombre" required>
 
-            <label class="form-label" for="year_id">Asignar año:</label>
-            <select class="form-input" name="year_id" required>
-                <option value="0">--Seleccione--</option>
-                {% for year in years %}
-                <option value="{{ year.id }}">{{ year.name }}</option>
-                {% endfor %}
-            </select>
 
             <input class="btn btn-primary" type="submit" value="Crear">
         </form>
@@ -147,14 +141,7 @@
         document.addEventListener("DOMContentLoaded", function () {  // Espera a que el documento esté completamente cargado
             var form = document.querySelector("form");  // Selecciona el formulario
 
-            form.addEventListener("submit", function (event) {  // Escucha el evento 'submit' del formulario
-                var yearSelect = document.querySelector("select[name='year_id']");  // Selecciona el combobox
 
-                if (yearSelect.value === "0") {  // Si el valor del combobox es "0" (la opción "--Seleccione--")
-                    event.preventDefault();  // Previene la acción por defecto (enviar el formulario)
-                    alert("Por favor, seleccione un año.");  // Muestra un mensaje al usuario
-                }
-            });
         });
     </script>
 </body>

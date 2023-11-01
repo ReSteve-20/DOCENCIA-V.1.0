@@ -4,64 +4,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>COHORTES</title>
+    <title>MATRÍCULAS</title>
 
-    <!-- Enlaces a los archivos CSS de Bootstrap desde tu carpeta static -->
+    <!-- Enlaces a los archivos CSS de Bootstrap y Awesomplete -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.min.css" />
 
     <style>
-        body {
-            background: linear-gradient(to bottom, #1ca0f8, #fc91cf);
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .container {
-            text-align: center;
-            margin-top: 50px;
-        }
-
-        .form-container {
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        /* Estilos adicionales específicos para este formulario */
+        .matricula-form {
             max-width: 400px;
             margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
         }
 
-        .form-label {
-            font-size: 18px;
-            color: #333;
+        .matricula-form h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
         }
 
-        .form-input {
+        .matricula-form select,
+        .matricula-form input,
+        .matricula-form button {
             width: 100%;
             padding: 10px;
             margin-bottom: 20px;
             border: none;
             border-bottom: 1px solid #ccc;
             border-radius: 0;
-            background-color: transparent;
         }
 
-        .form-input:focus {
+        .matricula-form select:focus,
+        .matricula-form input:focus,
+        .matricula-form button:focus {
             outline: none;
             border-bottom: 2px solid #007bff;
         }
-
-        .nav-custom-radius {
-            border-radius: 5px;
-        }
     </style>
 </head>
+
 
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark nav-custom-radius">
@@ -86,9 +71,6 @@
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                             <!-- Opciones del combobox. Puedes agregar o quitar según tus necesidades -->
-                            <li><a class="dropdown-item" href="{{ url_for('register') }}">Registrar Docente</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('add_year') }}">Añadir año.</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('add_universidad') }}">Añadir universidad</a>
                             <li><a class="dropdown-item" href="{{ url_for('manage_teachers') }}">Gestionar Docentes</a>
                             <li><a class="dropdown-item" href="{{ url_for('view_logs') }}">Ver Logs</a></li>
                         </ul>
@@ -110,7 +92,6 @@
             </div>
         </div>
     </nav>
-    <br>
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
     <div class="container mt-3">
@@ -122,37 +103,44 @@
     </div>
     {% endif %}
     {% endwith %}
-    <div class="container form-container">
-        <h2>Crear cohorte</h2>
-        <form action="{{ url_for('add_cohort') }}" method="post">
-            <label class="form-label" for="name">Nombre cohorte:</label>
-            <input class="form-input" type="text" name="name" required>
 
-            <label class="form-label" for="year_id">Asignar año:</label>
-            <select class="form-input" name="year_id" required>
-                <option value="0">--Seleccione--</option>
-                {% for year in years %}
-                <option value="{{ year.id }}">{{ year.name }}</option>
+    <div class="container mt-5">
+        <form class="matricula-form" method="post">
+            <h2>MATRÍCULAS</h2>
+            
+            <!-- Campo de autocompletado para estudiantes -->
+            <input class="awesomplete" type="text" id="studentAutocomplete" placeholder="Buscar un estudiante..." />
+            <!-- Campo oculto para el ID del estudiante -->
+            <input type="hidden" name="student_id" id="studentIdHidden">
+
+            <select name="cohort_id">
+                {% for cohort in cohorts %}
+                <option value="{{ cohort.id }}">{{ cohort.name }} - {{ cohort.year.name }}</option>
                 {% endfor %}
             </select>
 
-            <input class="btn btn-primary" type="submit" value="Crear">
+            <button type="submit">Matricular Estudiante</button>
         </form>
-        <a href="{{ url_for('admin_dashboard') }}">Atrás</a>
     </div>
 
-    <!-- Enlaces a los archivos JavaScript de Bootstrap desde tu carpeta static -->
+    <!-- Enlaces a los archivos JavaScript de Bootstrap y Awesomplete -->
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.min.js" async></script>
     <script>
-        document.addEventListener("DOMContentLoaded", function () {  // Espera a que el documento esté completamente cargado
-            var form = document.querySelector("form");  // Selecciona el formulario
+        document.addEventListener("DOMContentLoaded", function() {
+            var studentData = [
+                
+                {% for student in students %}
+                { value: "{{ student.id }}", label: "{{ student.full_name }}" },
+                {% endfor %}
+            ];
 
-            form.addEventListener("submit", function (event) {  // Escucha el evento 'submit' del formulario
-                var yearSelect = document.querySelector("select[name='year_id']");  // Selecciona el combobox
-
-                if (yearSelect.value === "0") {  // Si el valor del combobox es "0" (la opción "--Seleccione--")
-                    event.preventDefault();  // Previene la acción por defecto (enviar el formulario)
-                    alert("Por favor, seleccione un año.");  // Muestra un mensaje al usuario
+            var input = document.getElementById("studentAutocomplete");
+            var awesomplete = new Awesomplete(input, {
+                list: studentData,
+                replace: function(suggestion) {
+                    this.input.value = suggestion.label;
+                    document.getElementById("studentIdHidden").value = suggestion.value;
                 }
             });
         });

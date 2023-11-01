@@ -146,11 +146,12 @@
 
 
 
-                    <label class="form-label" for="profile_type">Tipo de docente:</label>
-                    <select class="form-input" name="profile_type" id="profile_type" required>
+                    <label class="form-label" for="profile_type">Especializacion:</label>
+                    <select class="form-input" name="especializacion_id" required>
                         <option value="0">--Seleccione--</option>
-                        <option value="admin">Administrador</option>
-                        <option value="normal">Normal</option>
+                        {% for especializacion in especializaciones %}
+                        <option value="{{ especializacion.id }}">{{ especializacion.nombre }}</option>
+                        {% endfor %}
                     </select>
                     <label class="form-label" for="confirm_pin_security">Confirmar PIN de Seguridad:</label>
                     <input class="form-input" type="number" name="confirm_pin_security" id="confirm_pin_security"
@@ -161,7 +162,7 @@
             
             <button class="btn btn-primary" type="submit">Registrar</button>
         </form>
-        <a href="{{ url_for('dashboard') }}">Atrás</a>
+        <a href="{{ url_for('admin_dashboard') }}">Atrás</a>
     </div>
 
     <!-- Enlaces a los archivos JavaScript de Bootstrap desde tu carpeta static -->

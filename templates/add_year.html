@@ -67,7 +67,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark nav-custom-radius">
         <div class="container-fluid">
             <!-- Nombre o logo -->
-            <a class="navbar-brand" href="{{ url_for('dashboard') }}">Inicio</a>
+            <a class="navbar-brand" href="{{ url_for('admin_dashboard') }}">Inicio</a>
 
             <!-- Botón de menú hamburguesa (para vistas móviles) -->
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown"
@@ -130,7 +130,7 @@
 
             <input class="btn btn-primary" type="submit" value="Activar">
         </form>
-        <a href="{{ url_for('dashboard') }}">Volver al Panel</a>
+        <a href="{{ url_for('admin_dashboard') }}">Volver al Panel</a>
     </div>
 
     <!-- Enlaces a los archivos JavaScript de Bootstrap desde tu carpeta static -->

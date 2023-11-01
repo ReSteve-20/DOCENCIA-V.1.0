@@ -4,9 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAMBIAR CONTRASEÑA</title>
+    <title>PARAMETROS</title>
+
+    <!-- Enlaces a los archivos CSS de Bootstrap desde tu carpeta static -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+
     <style>
         body {
             background: linear-gradient(to bottom, #1ca0f8, #fc91cf);
@@ -20,13 +23,12 @@
             justify-content: center;
         }
 
-        h1 {
-            font-size: 36px;
-            color: #333;
-            margin-bottom: 20px;
+        .container {
+            text-align: center;
+            margin-top: 50px;
         }
 
-        form {
+        .form-container {
             background-color: #fff;
             padding: 30px;
             border-radius: 10px;
@@ -35,12 +37,12 @@
             margin: 0 auto;
         }
 
-        label {
+        .form-label {
             font-size: 18px;
             color: #333;
         }
 
-        input[type="password"] {
+        .form-input {
             width: 100%;
             padding: 10px;
             margin-bottom: 20px;
@@ -50,31 +52,15 @@
             background-color: transparent;
         }
 
-        input[type="password"]:focus {
+        .form-input:focus {
             outline: none;
             border-bottom: 2px solid #007bff;
-        }
-
-        button[type="submit"] {
-            background-color: #007bff;
-            border-color: #007bff;
-            color: #fff;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        button[type="submit"]:hover {
-            background-color: #0056b3;
-            border-color: #0056b3;
         }
     </style>
 </head>
 
 <body>
-    
-    <h1>Cambiar Contraseña</h1>
-    
+
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
     <div class="container mt-3">
@@ -86,18 +72,18 @@
     </div>
     {% endif %}
     {% endwith %}
-    <form method="POST" action="{{ url_for('change_password') }}">
-        <label for="current_password">Contraseña Actual:</label>
-        <input type="password" name="current_password" required>
 
-        <label for="new_password">Nueva Contraseña:</label>
-        <input type="password" name="new_password" required>
+    <div class="container form-container">
+        <h2>Añadir Parámetro</h2>
+        <form action="" method="post">
+            <label class="form-label" for="nombre">Nombre del Parámetro:</label>
+            <input class="form-input" type="text" id="nombre" name="nombre" required>
+            <input type="number" id="peso" name="peso" value="1" hidden>
+            <input class="btn btn-primary" type="submit" value="Añadir">
+        </form>
+    </div>
 
-        <label for="confirm_password">Confirmar Nueva Contraseña:</label>
-        <input type="password" name="confirm_password" required>
-
-        <button type="submit">Guardar Cambios</button>
-    </form>
+    <!-- Enlaces a los archivos JavaScript de Bootstrap desde tu carpeta static -->
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
 </body>
 

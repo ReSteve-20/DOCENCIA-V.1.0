@@ -67,7 +67,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark nav-custom-radius">
         <div class="container-fluid">
             <!-- Nombre o logo -->
-            <a class="navbar-brand" href="{{ url_for('dashboard') }}">Inicio</a>
+            <a class="navbar-brand" href="{{ url_for('admin_dashboard') }}">Inicio</a>
 
             <!-- Botón de menú hamburguesa (para vistas móviles) -->
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown"
@@ -101,7 +101,8 @@
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                             <!-- Opciones del combobox. Puedes agregar o quitar según tus necesidades -->
-                            <li><a class="dropdown-item" href="{{ url_for('change_password') }}">Cambiar contraseña</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('change_password') }}">Cambiar contraseña</a>
+                            </li>
                         </ul>
                     </li>
                 </ul>
@@ -110,7 +111,18 @@
             </div>
         </div>
     </nav>
-<br>
+    <br>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="container mt-3">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
     <div class="container form-container">
         <h2>Añadir universidad</h2>
         <form action="{{ url_for('add_universidad') }}" method="post">
@@ -120,15 +132,15 @@
 
             <input class="btn btn-primary" type="submit" value="Crear">
         </form>
-        <a href="{{ url_for('dashboard') }}">Atrás</a>
+        <a href="{{ url_for('admin_dashboard') }}">Atrás</a>
     </div>
 
     <!-- Enlaces a los archivos JavaScript de Bootstrap desde tu carpeta static -->
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
     <script>
-        document.addEventListener("DOMContentLoaded", function() {  // Espera a que el documento esté completamente cargado
+        document.addEventListener("DOMContentLoaded", function () {  // Espera a que el documento esté completamente cargado
             var form = document.querySelector("form");  // Selecciona el formulario
-    
+
 
         });
     </script>

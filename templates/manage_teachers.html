@@ -8,13 +8,50 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Estilos personalizados para el diseño adaptable */
+
+/* Dispositivos más pequeños (teléfonos, hasta 600px) */
+@media (max-width: 600px) {
+    .nav-custom-radius {
+        border-radius: 0;  /* Ajusta el radio de borde de la navegación para pantallas pequeñas */
+    }
+
+    h2 {
+        font-size: 1.5rem;
+    }
+    
+    .navbar-brand, .nav-link {
+        font-size: 0.8rem;
+    }
+}
+
+/* Dispositivos medianos (tablets, 600px y más) */
+@media (min-width: 600px) and (max-width: 992px) {
+    /* Ajusta estilos para tablets, si es necesario. Por ejemplo: */
+    .navbar-brand, .nav-link {
+        font-size: 0.9rem;
+    }
+}
+
+/* Dispositivos grandes (laptops/desktops, 992px y más) */
+@media (min-width: 992px) {
+    /* Ajusta estilos para laptops y desktops, si es necesario. Por ejemplo: */
+    .navbar-brand, .nav-link {
+        font-size: 1rem;
+    }
+}
+
+/* Puedes continuar agregando más estilos específicos aquí */
+
+    </style>
 </head>
 
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark nav-custom-radius">
         <div class="container-fluid">
             <!-- Nombre o logo -->
-            <a class="navbar-brand" href="{{ url_for('dashboard') }}">Inicio</a>
+            <a class="navbar-brand" href="{{ url_for('admin_dashboard') }}">Inicio</a>
 
             <!-- Botón de menú hamburguesa (para vistas móviles) -->
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown"
@@ -33,9 +70,6 @@
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                             <!-- Opciones del combobox. Puedes agregar o quitar según tus necesidades -->
-                            <li><a class="dropdown-item" href="{{ url_for('register') }}">Registrar Docente</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('add_year') }}">Añadir año.</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('add_universidad') }}">Añadir universidad</a>
                             <li><a class="dropdown-item" href="{{ url_for('manage_teachers') }}">Gestionar Docentes</a>
                             <li><a class="dropdown-item" href="{{ url_for('view_logs') }}">Ver Logs</a></li>
                         </ul>
@@ -70,7 +104,7 @@
     {% endwith %}
     <div class="container mt-4">
         <h2 class="mb-4">Gestionar Docentes</h2>
-
+        <div class="table-responsive">
         <table class="table table-striped table-hover">
             <thead>
                 <tr>
@@ -109,6 +143,7 @@
                 {% endfor %}
             </tbody>
         </table>
+        </div>
     </div>
 
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>

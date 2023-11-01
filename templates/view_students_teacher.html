@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIS ESTUDIANTES</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #e8eaf6;
+            font-family: 'Open Sans', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            margin-top: 20px;
+        }
+
+        h1,
+        h2 {
+            color: #3f51b5;
+            margin-bottom: 20px;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-top: 10px;
+            transition: border-color 0.2s;
+        }
+
+        select:focus {
+            border-color: #3f51b5;
+            outline: none;
+        }
+
+        table {
+            border-collapse: collapse;
+            margin-top: 20px;
+            border: 1px solid #ccc;
+        }
+
+        th,
+        td {
+            padding: 12px 15px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #3f51b5;
+            color: #096d47;
+        }
+
+        tr:hover {
+            background-color: #f0f0f0;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f7f7f9;
+        }
+
+        .btn-custom {
+            background-color: #ff4081;
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 1rem;
+            margin-right: 10px;
+            transition: background-color 0.2s;
+        }
+
+        .btn-custom:hover {
+            background-color: #f36b7d;
+        }
+
+        .nav-custom-radius {
+            border-radius: 5px;
+        }
+
+        /* Estilos adicionales para el navbar */
+        .navbar {
+            padding: 0.8rem 1rem;
+        }
+
+        .btn-logout {
+            background-color: #ff4081;
+            color: #fff;
+            border: none;
+            padding: 7px 12px;
+            border-radius: 5px;
+            transition: background-color 0.2s;
+        }
+
+        .btn-logout:hover {
+            background-color: #f36b7d;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark nav-custom-radius">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('teacher_dashboard') }}">Inicio</a>
+            <div class="ml-auto">
+                <a href="{{ url_for('logout') }}" class="btn btn-logout">Cerrar Sesión</a>
+            </div>
+        </div>
+    </nav>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="container mt-3">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+    <div class="container">
+        <h2>MIS ESTUDIANTES</h2>
+        <form method="post">
+            <select name="selected_cohort" onchange="this.form.submit()">
+                <option value="">--Cohortes--</option>
+                {% for cohort in cohorts %}
+                <option value="{{ cohort.id }}" {% if selected_cohort and cohort.id==selected_cohort.id %} selected {%
+                    endif %}>{{ cohort.name }} - {{ cohort.year.name }}</option>
+                {% endfor %}
+            </select>
+        </form>
+
+        {% if students %}
+        <h2>Estudiantes: {{ selected_cohort.name }} - {{ selected_cohort.year.name}} </h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Estudiante</th>
+                    <th>Identificacion</th>
+                    <th>Docente</th>
+                    <th>Autoevaluación</th>
+                    <th>Administrador</th>
+                    <th>Calificacion Final</th>
+                    <th>Opciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                <tr>
+                    <td>{{ student.full_name }}</td>
+                    <td>{{ student.identificacion }}</td>
+                    <td>{{ student.teacher_grade|round(2) if student.teacher_grade is not none else 'N/A' }}</td>
+                    <td>{{ student.self_evaluation|round(2) if student.self_evaluation is not none else 'N/A' }}</td>
+                    <td>{{ student.group_grade|round(2) if student.group_grade is not none else 'N/A' }}</td>
+                    <td>{{ student.final_grade }}</td>
+                    <td>
+                        <a href="{{ url_for('add_teacher_grade', student_id=student.id, cohort_id=selected_cohort.id) }}" class="btn btn-custom btn-sm">Calificar</a>
+                        
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <p>Nota: La calificación final no se mostrará hasta que todos los implicados (docente, autoevaluación del estudiante y administrador) hayan subido sus calificaciones.</p>
+        {% endif %}
+    </div>
+
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</body>
+
+</html>

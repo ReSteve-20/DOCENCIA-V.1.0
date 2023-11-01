@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EDITAR DOCENTE</title>
+    <title>EDITAR ESTUDIANTE</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
     <!-- Estilos adicionales de register.html -->
@@ -89,38 +89,38 @@
     </div>
     {% endif %}
     {% endwith %}
-    <h2>Editar Docente: {{ teacher.full_name }}</h2>
+    <h2>Editar Estudiante: {{ student.full_name }}</h2>
     <div class="container form-container">
-        <form action="{{ url_for('edit_teacher', teacher_id=teacher.id) }}" method="post">
+        <form action="{{ url_for('edit_student', student_id=student.id) }}" method="post">
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label" for="tipo_identificacion">Tipo de identificación:</label>
-                    <input class="form-input" type="text" name="tipo_identificacion" value="{{ teacher.tipo_identificacion }}" readonly>
+                    <input class="form-input" type="text" name="tipo_identificacion" value="{{ student.tipo_identificacion }}" readonly>
 
                     
 
                     <label class="form-label" for="full_name">Nombre Completo:</label>
-                    <input class="form-input" type="text" name="full_name" value="{{ teacher.full_name }}" required>
+                    <input class="form-input" type="text" name="full_name" value="{{ student.full_name }}" required>
 
                     <label class="form-label" for="email">Correo Electrónico:</label>
-                    <input class="form-input" type="email" name="email" value="{{ teacher.email }}" required>
+                    <input class="form-input" type="email" name="email" value="{{ student.email }}" required>
 
                     <label class="form-label" for="direccion_residencia">Dirección:</label>
-                    <input class="form-input" type="text" name="direccion_residencia" value="{{ teacher.direccion_residencia }}" required>
+                    <input class="form-input" type="text" name="direccion_residencia" value="{{ student.direccion_residencia }}" required>
                 </div>
                 <div class="form-group">
 
                     <label class="form-label" for="identificacion">Identificación:</label>
-                    <input class="form-input" type="number" name="identificacion" value="{{ teacher.identificacion }}" readonly>
+                    <input class="form-input" type="number" name="identificacion" value="{{ student.identificacion }}" readonly>
                     <label class="form-label" for="sexo">Sexo:</label>
                     <select class="form-input" name="sexo" required>
-                        <option value="MASCULINO" {{ 'selected' if teacher.sexo == 'MASCULINO' else '' }}>MASCULINO</option>
-                        <option value="FEMENINO" {{ 'selected' if teacher.sexo == 'FEMENINO' else '' }}>FEMENINO</option>
-                        <option value="OTRO" {{ 'selected' if teacher.sexo == 'OTRO' else '' }}>OTRO</option>
+                        <option value="MASCULINO" {{ 'selected' if student.sexo == 'MASCULINO' else '' }}>MASCULINO</option>
+                        <option value="FEMENINO" {{ 'selected' if student.sexo == 'FEMENINO' else '' }}>FEMENINO</option>
+                        <option value="OTRO" {{ 'selected' if student.sexo == 'OTRO' else '' }}>OTRO</option>
                     </select>
 
                     <label class="form-label" for="telefono">Teléfono:</label>
-                    <input class="form-input" type="number" name="telefono" value="{{ teacher.telefono }}" required>
+                    <input class="form-input" type="number" name="telefono" value="{{ student.telefono }}" required>
                 </div>
             </div>
             <button class="btn btn-primary" type="submit">Guardar Cambios</button>
