@@ -156,14 +156,15 @@
                     <label class="form-label" for="profile_type">Perfil:</label>
                     <select class="form-input" name="profile_id" required>
                         <option value="2">Docente</option>
-                        
+
                         <option value="1">Admin</option>
-                        
+
                     </select>
                 </div>
             </div>
-            <small class="form-text text-muted">Guarde este PIN en un lugar seguro. Es la única forma de restablecer la contraseña si la olvida.</small><br>
-            
+            <small class="form-text text-muted">Guarde este PIN en un lugar seguro. Es la única forma de restablecer la
+                contraseña si la olvida.</small><br>
+
             <button class="btn btn-primary" type="submit">Registrar</button>
         </form>
         <a href="{{ url_for('admin_dashboard') }}">Atrás</a>
@@ -175,27 +176,15 @@
         function validateForm() {
             var password = document.getElementById("password").value;
             var confirm_password = document.getElementById("confirm_password").value;
-            var pin_security = document.getElementById("pin_security").value;
-            var confirm_pin_security = document.getElementById("confirm_pin_security").value;
-            var select = document.getElementById("profile_type");
-    
+
             if (password !== confirm_password) {
                 alert("Las contraseñas no coinciden. Por favor, inténtelo de nuevo.");
                 return false;
             }
-    
-            if (pin_security !== confirm_pin_security) {
-                alert("Los PINs de seguridad no coinciden. Por favor, inténtelo de nuevo.");
-                return false;
-            }
-    
-            if (select.value === "0") {
-                alert("Por favor, seleccione un tipo de docente.");
-                return false;
-            }
-    
+
             return true;
         }
+
     </script>
 </body>
 
