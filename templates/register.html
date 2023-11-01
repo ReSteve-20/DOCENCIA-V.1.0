@@ -153,9 +153,13 @@
                         <option value="{{ especializacion.id }}">{{ especializacion.nombre }}</option>
                         {% endfor %}
                     </select>
-                    <label class="form-label" for="confirm_pin_security">Confirmar PIN de Seguridad:</label>
-                    <input class="form-input" type="number" name="confirm_pin_security" id="confirm_pin_security"
-                        placeholder="Confirme el PIN de 6 dígitos" required>
+                    <label class="form-label" for="profile_type">Perfil:</label>
+                    <select class="form-input" name="profile_id" required>
+                        <option value="2">Docente</option>
+                        
+                        <option value="1">Admin</option>
+                        
+                    </select>
                 </div>
             </div>
             <small class="form-text text-muted">Guarde este PIN en un lugar seguro. Es la única forma de restablecer la contraseña si la olvida.</small><br>

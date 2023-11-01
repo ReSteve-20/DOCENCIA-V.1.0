@@ -230,10 +230,10 @@ def register():
         sexo = request.form.get("sexo")
         telefono = request.form.get("telefono")
         direccion_residencia = request.form.get("direccion_residencia")
-        profile_id = 2
+        profile_id = request.form.get("profile_id")
         pin_security = request.form.get("pin_security")
         especializacion_id = request.form.get("especializacion_id")
-        # send_verification_code(email, pin_security)
+        send_verification_code(email, pin_security)
         especializacion = Especializacion.query.filter_by(id=especializacion_id).first()
 
         if not especializacion:
@@ -248,11 +248,7 @@ def register():
             return render_template("register.html")
 
         # Verifica si el perfil especificado es "admin" o "normal"
-        if profile_id != 2:
-            flash(
-                'Tipo de perfil no válido. por favor defina si su docente es "administrador" o "normal".',
-                "danger",
-            )
+        
         else:
             # Obtén el perfil correspondiente desde la base de datos
             profile = Profile.query.filter_by(id=profile_id).first()
@@ -518,6 +514,7 @@ def register_student():
         direccion_residencia = request.form.get("direccion_residencia")
         pin_security = request.form.get("pin_security")
         universidad_id = request.form.get("universidad_id")
+        send_verification_code(email, pin_security)
 
         # Verificaciones
         if not pin_security or len(pin_security) != 6 or not pin_security.isdigit():
