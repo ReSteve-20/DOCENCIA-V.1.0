@@ -317,6 +317,37 @@ def manage_teachers():
     teachers = User.query.filter_by(profile_id=ID_DOCENTE_NORMAL).all()
     return render_template("manage_teachers.html", teachers=teachers)
 
+@app.route("/admin/estudiantes", methods=["GET", "POST"])
+@login_required
+@admin_required  # Asumiendo que ya existe un decorador para verificar si el usuario es administrador.
+def manage_students():
+    ID_ADMIN = 1
+    ID_ESTUDIANTE_NORMAL = 3  # Asumiendo que los estudiantes tienen una ID distinta
+
+    if request.method == "POST":
+        # Si se envía el formulario para activar/desactivar estudiante
+        if "toggle_active" in request.form:
+            student_id = request.form.get("toggle_active")
+            student = User.query.get(student_id)
+            if student:
+                if student.profile_id == ID_ADMIN:
+                    flash("No se puede desactivar a un administrador.")
+                else:
+                    student.is_active = not student.is_active
+                    student.modified_by = current_user.full_name
+
+                    db.session.commit()
+                    status = "activado" if student.is_active else "desactivado"
+                    log_activity(
+                        current_user,
+                        f"Estudiante {status}",
+                        f"Estudiante: {student.full_name}",
+                    )
+                    flash(f"Estudiante {status} con éxito.")
+
+    students = User.query.filter_by(profile_id=ID_ESTUDIANTE_NORMAL).all()
+    return render_template("manage_students.html", students=students)
+
 
 @app.route("/admin/edit_teacher/<int:teacher_id>", methods=["GET", "POST"])
 @admin_required
@@ -630,11 +661,14 @@ def view_students_admin():
                 "final_grade": grade.final_grade,
             }
             students.append(student_data)
+
+    teacher = selected_cohort.teacher if selected_cohort else None
     return render_template(
         "view_students_admin.html",
         cohorts=cohorts,
         students=students,
         selected_cohort=selected_cohort,
+        teacher=teacher,
     )
 
 
@@ -884,9 +918,10 @@ def add_teacher_grade(student_id, cohort_id):
         db.session.commit()
         log_activity(
             current_user,
-            f"Agregó la calificacion, { final_grade } al estudiante { student.full_name } ",f" del cohorte {cohort.name}",
+            f"Agregó la calificacion, { final_grade } al estudiante { student.full_name } ",
+            f" del cohorte {cohort.name}",
         )
-        flash('Calificación añadida!', 'message')
+        flash("Calificación añadida!", "message")
 
         return redirect(url_for("view_students_teacher"))
 
@@ -936,9 +971,10 @@ def add_admin_grade(student_id, cohort_id):
         db.session.commit()
         log_activity(
             current_user,
-            f"Agregó la calificacion, { final_grade } al estudiante { student.full_name } ",f" del cohorte {cohort.name}",
+            f"Agregó la calificacion, { final_grade } al estudiante { student.full_name } ",
+            f" del cohorte {cohort.name}",
         )
-        flash('Calificación añadida!', 'message')
+        flash("Calificación añadida!", "message")
 
         return redirect(url_for("view_students_admin"))
 
@@ -961,7 +997,7 @@ def add_parametro():
             current_user,
             f"Creó el parámetro, { nombre }",
         )
-        flash('Calificación añadida!', 'message')
+        flash("Calificación añadida!", "message")
         flash("Parámetro añadido con éxito", "sucess")
         return redirect(url_for("add_parametro"))
     return render_template("add_parametro.html")
@@ -976,56 +1012,50 @@ def verify_password():
     return jsonify(valid=False)
 
 
-@app.route(
-    "/generate_report/<int:teacher_id>/<int:year_id>/<int:cohort_id>", methods=["POST"]
-)
+@app.route("/generate_student_report/<int:student_id>", methods=["GET"])
 @login_required
-def generate_report(teacher_id, year_id, cohort_id):
-    especificar_parametros = request.form.get("especificar_parametros")
-    parametros = request.form.get("parametros")
-    # Recupera la información necesaria de la base de datos
-    teacher = User.query.get(teacher_id)
-    year = Year.query.get(year_id)
-    cohort = Cohort.query.get(cohort_id)
-
-    students = (
-        User.query.join(User.joined_cohorts)
-        .filter(Cohort.id == cohort_id, User.is_student == True, User.is_active == True)
-        .all()
-    )
+@admin_required
+def generate_student_report(student_id):
+    student = User.query.get(student_id)
+    grades = Grade.query.filter_by(student_id=student_id).all()
 
     # Configura el documento
-    filename = f"report_{cohort.name}_{year.name}.pdf"
-
+    filename = f"report_student_{student.identificacion}.pdf"
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=landscape(letter))
 
     # Configura estilos
     styles = getSampleStyleSheet()
-    title_style = ParagraphStyle("Title", parent=styles["Heading1"], alignment=1)
+    title_style = ParagraphStyle("Title", parent=styles["Heading1"], alignment=1, spaceAfter=20)
+    subtitle_style = ParagraphStyle("Subtitle", parent=styles["Heading2"], alignment=1, spaceAfter=15)
     normal_style = styles["Normal"]
-    note_style = ParagraphStyle(
-        "Note", parent=styles["Italic"], textColor=colors.red, fontSize=10
-    )
 
     # Genera el contenido
     content = []
 
-    title = f"{cohort.name} - {year.name}"
+    # Título
+    title = f"Reporte Académico de {student.full_name}"
     content.append(Paragraph(title, title_style))
-    content.append(Paragraph(f"Docente: {teacher.full_name}", normal_style))
+
+    # Subtítulo: Parámetros de Calificación
+    content.append(Paragraph("Parámetros de Calificación", subtitle_style))
+    parametros = ParametroCalificacion.query.all()
+    for param in parametros:
+        content.append(Paragraph(f"- {param.nombre} (Peso: {param.peso})", normal_style))
     content.append(Spacer(1, 12))
 
-    # Tabla de estudiantes y calificaciones
-    data = [["Identificacion", "Estudiante", "Nota Final"]]
-    for student in students:
-        grade = Grade.query.filter_by(student_id=student.id).first()
-        final_grade = round(grade.final_grade, 2) if grade else "N/A"
-        data.append([student.identification, student.full_name, final_grade])
-    if especificar_parametros == "si" and parametros:
-        content.append(Paragraph("Parámetros Evaluados:", title_style))
-        content.append(Paragraph(parametros, normal_style))
-        content.append(Spacer(1, 12))
+    # Tabla de calificaciones del estudiante
+    data = [["Cohorte", "Docente", "Autoevaluación", "Administrador", "Nota Final", "Docente a Cargo"]]
+    for grade in grades:
+        cohort = Cohort.query.get(grade.cohort_id)
+        teacher = cohort.teacher
+
+        final_grade = round(grade.final_grade, 2) if grade and grade.final_grade is not None else "N/A"
+        teacher_grade = round(grade.teacher_grade, 2) if grade and grade.teacher_grade is not None else "N/A"
+        self_evaluation = round(grade.self_evaluation, 2) if grade and grade.self_evaluation is not None else "N/A"
+        group_grade = round(grade.group_grade, 2) if grade and grade.group_grade is not None else "N/A"
+
+        data.append([cohort.name, teacher_grade, self_evaluation, group_grade, final_grade, teacher.full_name])
 
     table = Table(data)
     table_style = TableStyle(
@@ -1043,36 +1073,126 @@ def generate_report(teacher_id, year_id, cohort_id):
     table.setStyle(table_style)
     content.append(table)
 
-    # Sección de firmas
-    content.append(Spacer(1, 24))  # Espaciado incrementado
-    content.append(Paragraph("Firmas", title_style))
-    for student in students:
-        content.append(
-            Paragraph(f"{student.full_name}: _______________________", normal_style)
-        )
-        content.append(Spacer(1, 12))  # Espaciado entre firmas
-
-    # Nota sobre firmas
-    content.append(Spacer(1, 24))
-    content.append(
-        Paragraph(
-            "Nota: El estudiante que no firme no tendrá su nota registrada.", note_style
-        )
-    )
+    # Nota al pie
+    nota = "Nota: Las calificaciones presentadas en este reporte son el resultado de una evaluación basada en los parámetros mencionados anteriormente."
+    content.append(Spacer(1, 20))
+    content.append(Paragraph(nota, normal_style))
 
     doc.build(content)
-
     pdf_data = buffer.getvalue()
-    log_activity(
-        current_user,
-        "Generación de reporte PDF",
-        f"Reporte para el cohorte: {cohort.name} del año: {year.name}",
-    )
 
     response = make_response(pdf_data)
     response.headers["Content-Type"] = "application/pdf"
     response.headers["Content-Disposition"] = f"inline; filename={filename}"
+    log_activity(current_user, "Generó reporte individual",f"Estudiante: {student.full_name}")
     return response
+
+
+
+
+
+@app.route("/generate_report/<int:teacher_id>/<int:year_id>/<int:cohort_id>", methods=["GET"])
+@login_required
+@admin_required
+def generate_report(teacher_id, year_id, cohort_id):
+    teacher = User.query.get(teacher_id)
+    year = Year.query.get(year_id)
+    cohort = Cohort.query.get(cohort_id)
+    
+    # Verificar que los objetos no sean None
+    if not teacher or not year or not cohort:
+        return "Error: No se pudo encontrar el docente, año o cohorte especificado.", 400
+
+    parametros = ParametroCalificacion.query.all()
+
+    # Fetching students and their grades for the selected cohort
+    students_data = []
+    grades = Grade.query.filter_by(cohort_id=cohort_id).all()
+    for grade in grades:
+        # Check if all three grades are present
+        if grade.teacher_grade and grade.self_evaluation and grade.group_grade:
+            grade.final_grade = (
+                grade.teacher_grade + grade.self_evaluation + grade.group_grade
+            ) / 3
+            db.session.commit()  # Save the updated final_grade to database
+
+        student_data = {
+            "id": grade.student.id,
+            "full_name": grade.student.full_name,
+            "identificacion": grade.student.identificacion,
+            "teacher_grade": grade.teacher_grade,
+            "self_evaluation": grade.self_evaluation,
+            "group_grade": grade.group_grade,
+            "final_grade": grade.final_grade,
+        }
+        students_data.append(student_data)
+
+    # Configura el documento
+    filename = f"report_{cohort.name}_{year.name}.pdf"
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=landscape(letter))
+
+    # Configura estilos
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle("Title", parent=styles["Heading1"], alignment=1, spaceAfter=20)
+    subtitle_style = ParagraphStyle("Subtitle", parent=styles["Heading2"], alignment=1, spaceAfter=15)
+    normal_style = styles["Normal"]
+
+    # Genera el contenido
+    content = []
+
+    # Título
+    title = f"Reporte Académico: {cohort.name} - {year.name}"
+    content.append(Paragraph(title, title_style))
+    content.append(Paragraph(f"Docente a cargo: {teacher.full_name}", subtitle_style))
+    content.append(Spacer(1, 12))
+
+    # Tabla de estudiantes y calificaciones
+    data = [["Identificación", "Estudiante", "Nota Final"]]
+    for student_data in students_data:
+        data.append([
+            student_data["identificacion"], 
+            student_data["full_name"], 
+            round(student_data["final_grade"], 2) if student_data["final_grade"] is not None else "N/A"
+        ])
+
+    table = Table(data)
+    table_style = TableStyle(
+         [
+            ("BACKGROUND", (0, 0), (-1, 0), colors.skyblue),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+            ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTSIZE", (0, 0), (-1, 0), 14),
+            ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
+            ("BACKGROUND", (0, 1), (-1, -1), colors.beige),
+            ("GRID", (0, 0), (-1, -1), 1, colors.black),
+        ]
+    )
+    table.setStyle(table_style)
+    content.append(table)
+    content.append(Spacer(1, 20))
+
+    # Parámetros de calificación
+    content.append(Paragraph("Parámetros de Calificación:", subtitle_style))
+    for param in parametros:
+        content.append(Paragraph(f"- {param.nombre} (Peso: {param.peso})", normal_style))
+    content.append(Spacer(1, 20))
+
+    # Nota al pie
+    nota = "Las calificaciones presentadas en este reporte son el resultado de una evaluación basada en los parámetros mencionados anteriormente."
+    content.append(Paragraph(nota, normal_style))
+
+    doc.build(content)
+    pdf_data = buffer.getvalue()
+
+    response = make_response(pdf_data)
+    response.headers["Content-Type"] = "application/pdf"
+    response.headers["Content-Disposition"] = f"inline; filename={filename}"
+    log_activity(current_user, "Generó reporte",f"{cohort.name} {cohort.year.name}")
+    return response
+
+
 
 
 @app.route("/logout")

@@ -115,6 +115,7 @@
                 font-size: 1.5rem;
             }
         }
+        
     </style>
 </head>
 
@@ -155,43 +156,47 @@
 
         {% if students %}
         <h2>Estudiantes: {{ selected_cohort.name }}</h2>
+        <a href="{{ url_for('generate_report', teacher_id=teacher.id, year_id=selected_cohort.year.id, cohort_id=selected_cohort.id) }}"
+            class="btn btn-custom mb-3">Generar Reporte del Cohorte</a>
         <div class="table-responsive">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Estudiante</th>
-                    <th>Identificacion</th>
-                    <th>Docente</th>
-                    <th>Estudiante</th>
-                    <th>Administrador</th>
-                    <th>Calificación Final</th>
-                    <th>Opciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for student in students %}
-                <tr>
-                    <td>{{ student.full_name }}</td>
-                    <td>{{ student.identificacion }}</td>
-                    <td>{{ student.teacher_grade|round(2) if student.teacher_grade is not none else 'N/A' }}</td>
-                    <td>{{ student.self_evaluation|round(2) if student.self_evaluation is not none else 'N/A' }}</td>
-                    <td>{{ student.group_grade|round(2) if student.group_grade is not none else 'N/A' }}</td>
-                    <td>{{ student.final_grade|round(2) if student.final_grade is not none else 'N/A' }}</td>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Estudiante</th>
+                        <th>Identificacion</th>
+                        <th>Docente</th>
+                        <th>Estudiante</th>
+                        <th>Administrador</th>
+                        <th>Calificación Final</th>
+                        <th>Opciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td>{{ student.full_name }}</td>
+                        <td>{{ student.identificacion }}</td>
+                        <td>{{ student.teacher_grade|round(2) if student.teacher_grade else 'N/A' }}</td>
+                        <td>{{ student.self_evaluation|round(2) if student.self_evaluation else 'N/A' }}</td>
+                        <td>{{ student.group_grade|round(2) if student.group_grade else 'N/A' }}</td>
+                        <td>{{ student.final_grade|round(2) if student.final_grade else 'N/A' }}</td>
 
-                    <td>
-                        <a href="{{ url_for('add_admin_grade', student_id=student.id, cohort_id=selected_cohort.id) }}"
-                            class="btn btn-custom btn-sm">Calificar</a>
-                        <a href="{{ url_for('edit_student', student_id=student.id)}}"
-                            class="btn btn-custom btn-sm">Editar</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <p>Nota: La calificación final no se mostrará hasta que todos los implicados (docente, autoevaluación del
-            estudiante y administrador) hayan subido sus calificaciones.</p>
-        {% endif %}
-    </div>
+                        <td>
+                            <a href="{{ url_for('add_admin_grade', student_id=student.id, cohort_id=selected_cohort.id) }}"
+                                class="btn btn-custom btn-sm">Calificar</a>
+                            <a href="{{ url_for('edit_student', student_id=student.id)}}"
+                                class="btn btn-custom btn-sm">Editar</a>
+                            <a href="{{ url_for('generate_student_report', student_id=student.id) }}"
+                                class="btn btn-custom btn-sm">Reporte</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <p>Nota: La calificación final no se mostrará hasta que todos los implicados (docente, autoevaluación del
+                estudiante y administrador) hayan subido sus calificaciones.</p>
+            {% endif %}
+        </div>
     </div>
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
 
