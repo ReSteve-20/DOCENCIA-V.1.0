@@ -138,6 +138,7 @@
             var input = document.getElementById("studentAutocomplete");
             var awesomplete = new Awesomplete(input, {
                 list: studentData,
+                minChars: 1,
                 replace: function(suggestion) {
                     this.input.value = suggestion.label;
                     document.getElementById("studentIdHidden").value = suggestion.value;

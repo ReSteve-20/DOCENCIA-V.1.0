@@ -115,7 +115,17 @@
                 font-size: 1.5rem;
             }
         }
-        
+
+        /* Estilos para la columna de acciones */
+        .acciones {
+            text-align: center;
+            /* Centrar el contenido de la columna */
+        }
+
+        .acciones a {
+            margin-right: 5px;
+            /* Espacio entre los botones */
+        }
     </style>
 </head>
 
@@ -149,15 +159,23 @@
                 <option value="">--Cohortes--</option>
                 {% for cohort in cohorts %}
                 <option value="{{ cohort.id }}" {% if selected_cohort and cohort.id==selected_cohort.id %} selected {%
-                    endif %}>{{ cohort.name }} - {{ cohort.year.name }}</option>
+                    endif %}>{{ cohort.name }} - {{ cohort.year.name }} - {{ cohort.teacher.full_name }}</option>
                 {% endfor %}
             </select>
         </form>
 
-        {% if students %}
+        {% if selected_cohort %}
         <h2>Estudiantes: {{ selected_cohort.name }}</h2>
+        <h4> Docente: {{ selected_cohort.teacher.full_name }}</h4>
+
         <a href="{{ url_for('generate_report', teacher_id=teacher.id, year_id=selected_cohort.year.id, cohort_id=selected_cohort.id) }}"
             class="btn btn-custom mb-3">Generar Reporte del Cohorte</a>
+        <form action="{{ url_for('delete_cohort', cohort_id=selected_cohort.id) }}" method="post"
+            onsubmit="return confirm('¿Estás seguro de que deseas eliminar este cohorte?');" style="display:inline;">
+            <button type="submit" class="btn btn-danger mb-3">Eliminar Cohorte</button>
+        </form>
+
+        {% if students %}
         <div class="table-responsive">
             <table class="table">
                 <thead>
@@ -181,13 +199,18 @@
                         <td>{{ student.group_grade|round(2) if student.group_grade else 'N/A' }}</td>
                         <td>{{ student.final_grade|round(2) if student.final_grade else 'N/A' }}</td>
 
-                        <td>
+                        <td class="acciones">
                             <a href="{{ url_for('add_admin_grade', student_id=student.id, cohort_id=selected_cohort.id) }}"
                                 class="btn btn-custom btn-sm">Calificar</a>
                             <a href="{{ url_for('edit_student', student_id=student.id)}}"
                                 class="btn btn-custom btn-sm">Editar</a>
                             <a href="{{ url_for('generate_student_report', student_id=student.id) }}"
                                 class="btn btn-custom btn-sm">Reporte</a>
+                            <form action="{{ url_for('unenroll_student') }}" method="post" style="display:inline;">
+                                <input type="hidden" name="student_id" value="{{ student.id }}">
+                                <input type="hidden" name="cohort_id" value="{{ selected_cohort.id }}">
+                                <button type="submit" class="btn btn-danger btn-sm">Desmatricular</button>
+                            </form>
                         </td>
                     </tr>
                     {% endfor %}
@@ -195,8 +218,12 @@
             </table>
             <p>Nota: La calificación final no se mostrará hasta que todos los implicados (docente, autoevaluación del
                 estudiante y administrador) hayan subido sus calificaciones.</p>
-            {% endif %}
+
         </div>
+        {% else %}
+        <p>No hay estudiantes en este cohorte</p>
+        {% endif %}
+        {% endif %}
     </div>
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
 

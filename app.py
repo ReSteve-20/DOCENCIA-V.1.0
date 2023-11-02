@@ -52,28 +52,6 @@ import smtplib
 from email.message import EmailMessage
 
 
-def send_verification_code(destinatario, pin):
-    remitente = "docentesrec@outlook.es"
-    mensaje = f"Tu PIN de verificación es: {pin}. Guardalo en un lugar seguro. ¡No pierdas este PIN!"
-
-    email = EmailMessage()
-    email["From"] = remitente
-    email["To"] = destinatario
-    email["Subject"] = "PIN de Verificación"
-    email.set_content(mensaje)
-
-    smtp = smtplib.SMTP("smtp-mail.outlook.com", 587)
-    smtp.starttls()
-    smtp.login(remitente, "elsgvonvwhvpgdrs")
-    smtp.sendmail(remitente, destinatario, email.as_string())
-    smtp.quit()
-
-
-def current_time_in_bogota():
-    local_tz = pytz.timezone("America/Bogota")
-    return datetime.now(local_tz)
-
-
 app = Flask(__name__)
 
 app.config[
@@ -86,6 +64,32 @@ login_manager = LoginManager()
 login_manager.login_view = "login"
 login_manager.init_app(app)
 migrate = Migrate(app, db)
+
+
+def send_verification_code(destinatario, pin):
+    remitente = "docentesrec@outlook.es"
+    mensaje = f"Tu PIN de verificación es: {pin}. Guardalo en un lugar seguro. ¡No pierdas este PIN!"
+
+    email = EmailMessage()
+    email["From"] = remitente
+    email["To"] = destinatario
+    email["Subject"] = "PIN de Verificación"
+    email.set_content(mensaje)
+
+    try:
+        smtp = smtplib.SMTP("smtp-mail.outlook.com", 587)
+        smtp.starttls()
+        smtp.login(remitente, "elsgvonvwhvpgdrs")
+        smtp.sendmail(remitente, destinatario, email.as_string())
+        smtp.quit()
+    except smtplib.SMTPException as e:
+        print(f"Error al enviar el correo: {e}")
+        flash(f"GUARDA ESTE PIN EN UN LUGAR SEGURO {pin}", "info")
+
+
+def current_time_in_bogota():
+    local_tz = pytz.timezone("America/Bogota")
+    return datetime.now(local_tz)
 
 
 def log_activity(user, activity_type, details=None):
@@ -226,6 +230,14 @@ def register():
         identificacion = request.form.get("identificacion")
         full_name = request.form.get("full_name").upper()
         email = request.form.get("email")
+        user_with_email = User.query.filter_by(email=email).first()
+        if user_with_email:
+            flash(
+                "El correo electrónico ya está en uso. Por favor, elija otro.", "danger"
+            )
+            return render_template(
+                "register.html", especializaciones=Especializacion.query.all()
+            )
         password = request.form.get("password")
         sexo = request.form.get("sexo")
         telefono = request.form.get("telefono")
@@ -238,17 +250,23 @@ def register():
 
         if not especializacion:
             flash("Especialización no válida.", "danger")
-            return render_template("register.html")
+            return render_template(
+                "register.html", especializaciones=Especializacion.query.all()
+            )
         # Verificación adicional para el nuevo campo
         if not pin_security or len(pin_security) != 6 or not pin_security.isdigit():
             flash("El PIN de seguridad debe ser un número de 6 dígitos.", "danger")
-            return render_template("register.html")
+            return render_template(
+                "register.html", especializaciones=Especializacion.query.all()
+            )
         if tipo_identificacion not in ["CC", "TI", "CE", "PA"]:
             flash("Tipo de identificación no válido.", "danger")
-            return render_template("register.html")
+            return render_template(
+                "register.html", especializaciones=Especializacion.query.all()
+            )
 
         # Verifica si el perfil especificado es "admin" o "normal"
-        
+
         else:
             # Obtén el perfil correspondiente desde la base de datos
             profile = Profile.query.filter_by(id=profile_id).first()
@@ -312,6 +330,7 @@ def manage_teachers():
 
     teachers = User.query.filter_by(profile_id=ID_DOCENTE_NORMAL).all()
     return render_template("manage_teachers.html", teachers=teachers)
+
 
 @app.route("/admin/estudiantes", methods=["GET", "POST"])
 @login_required
@@ -498,6 +517,21 @@ def add_cohort():
     )  # Lista de años para que el usuario elija al crear un cohort
     return render_template("add_cohort.html", years=years)
 
+@app.route('/delete_cohort/<int:cohort_id>', methods=['POST'])
+@admin_required
+@login_required
+def delete_cohort(cohort_id):
+    cohort = Cohort.query.get_or_404(cohort_id)
+    if cohort.students:  # Si hay estudiantes asociados al cohorte
+        flash('No puedes eliminar un cohorte que tiene estudiantes asociados.', 'danger')
+        return redirect(url_for('view_students_admin'))
+    else:
+        # Asumiendo que no hay otras relaciones que dependan de Cohort, simplemente eliminamos el cohorte.
+        # En caso de haber otras relaciones, asegúrate de manejarlas adecuadamente antes de eliminar el cohorte.
+        db.session.delete(cohort)
+        db.session.commit()
+        flash('Cohorte eliminado con éxito.', 'success')
+        return redirect(url_for('view_students_admin'))
 
 @app.route("/register_student", methods=["GET", "POST"])
 @admin_required
@@ -508,6 +542,14 @@ def register_student():
         identificacion = request.form.get("identificacion")
         full_name = request.form.get("full_name").upper()
         email = request.form.get("email")
+        user_with_email = User.query.filter_by(email=email).first()
+        if user_with_email:
+            flash(
+                "El correo electrónico ya está en uso. Por favor, elija otro.", "danger"
+            )
+            return render_template(
+                "add_student.html", universidades=Universidad.query.all()
+            )
         password = request.form.get("password")
         sexo = request.form.get("sexo")
         telefono = request.form.get("telefono")
@@ -519,21 +561,29 @@ def register_student():
         # Verificaciones
         if not pin_security or len(pin_security) != 6 or not pin_security.isdigit():
             flash("El PIN de seguridad debe ser un número de 6 dígitos.", "danger")
-            return render_template("add_student.html")
+            return render_template(
+                "add_student.html", universidades=Universidad.query.all()
+            )
 
         if tipo_identificacion not in ["CC", "TI", "CE", "PA"]:
             flash("Tipo de identificación no válido.", "danger")
-            return render_template("add_student.html")
+            return render_template(
+                "add_student.html", universidades=Universidad.query.all()
+            )
 
         universidad = Universidad.query.filter_by(id=universidad_id).first()
         if not universidad:
             flash("Universidad no válida.", "danger")
-            return render_template("add_student.html")
+            return render_template(
+                "add_student.html", universidades=Universidad.query.all()
+            )
 
         profile = Profile.query.filter_by(id=3).first()  # Estudiante
         if not profile:
             flash("Perfil de estudiante no encontrado.", "danger")
-            return render_template("add_student.html")
+            return render_template(
+                "add_student.html", universidades=Universidad.query.all()
+            )
 
         # Creación del usuario
         new_user = User(
@@ -624,6 +674,47 @@ def enroll_student():
     students = User.query.filter_by(profile_id=3).all()
     cohorts = Cohort.query.all()
     return render_template("enroll_student.html", students=students, cohorts=cohorts)
+
+
+@app.route("/unenroll_student", methods=["POST"])
+@login_required
+@admin_required
+def unenroll_student():
+    student_id = request.form.get("student_id")
+    cohort_id = request.form.get("cohort_id")
+
+    student = User.query.get(student_id)
+    cohort = Cohort.query.get(cohort_id)
+
+    # Validar si el estudiante existe
+    if not student:
+        flash("El estudiante enviado no existe.", "error")
+        return redirect(url_for("admin_dashboard"))
+
+    grade_entry = Grade.query.filter_by(
+        student_id=student.id, cohort_id=cohort.id
+    ).first()
+
+    # Check if the student is actually enrolled in the cohort
+    if not grade_entry:
+        flash("El estudiante no está matriculado en este cohorte.", "error")
+        return redirect(url_for("admin_dashboard"))
+
+    try:
+        # Unenrolling the student by deleting the Grade entry
+        db.session.delete(grade_entry)
+        db.session.commit()
+
+        log_activity(
+            current_user,
+            "Desmatriculó a",
+            f"Estudiante: {student.full_name} del cohorte: {cohort.name}, {cohort.year.name}",
+        )
+        flash("Estudiante desmatriculado con éxito!", "success")
+    except Exception as e:
+        flash(f"Error al desmatricular: {str(e)}", "error")
+
+    return redirect(url_for("admin_dashboard"))
 
 
 @app.route("/view_students_admin", methods=["GET", "POST"])
@@ -759,26 +850,35 @@ def create_rotacion():
 
         # Crear un nuevo cohorte basado en la rotación
         new_cohort_name = f"{base_cohort_name} R {numero_rotacion}"
-        new_cohort = Cohort(
-            name=new_cohort_name, year_id=original_cohort.year_id, teacher_id=teacher_id
-        )
-        db.session.add(new_cohort)
-        db.session.commit()
+        cohort_exist = Cohort.query.filter_by(
+            name=new_cohort_name, year_id=original_cohort.year_id
+        ).first()
+        if cohort_exist:
+            flash("Esta rotación ya existe", 'warning')
+            return redirect(url_for("create_rotacion"))
+        else:
+            new_cohort = Cohort(
+                name=new_cohort_name,
+                year_id=original_cohort.year_id,
+                teacher_id=teacher_id,
+            )
+            db.session.add(new_cohort)
+            db.session.commit()
 
-        # Copiar solo los estudiantes seleccionados del cohorte original al nuevo cohorte
-        for student_id in selected_students_ids:
-            grade = Grade(student_id=student_id, cohort_id=new_cohort.id)
-            db.session.add(grade)
-        db.session.commit()
+            # Copiar solo los estudiantes seleccionados del cohorte original al nuevo cohorte
+            for student_id in selected_students_ids:
+                grade = Grade(student_id=student_id, cohort_id=new_cohort.id)
+                db.session.add(grade)
+            db.session.commit()
 
-        log_activity(
-            current_user,
-            f"Rotación creada {new_cohort_name}",
-            # f"Estudiante: {user.full_name}, Cohorte: {cohort_name}",
-        )
+            log_activity(
+                current_user,
+                f"Rotación creada {new_cohort_name}",
+                # f"Estudiante: {user.full_name}, Cohorte: {cohort_name}",
+            )
 
-        flash("Rotación creada con éxito.", "success")
-        return redirect(url_for("create_rotacion"))
+            flash("Rotación creada con éxito.", "success")
+            return redirect(url_for("create_rotacion"))
 
     cohorts = Cohort.query.all()
     teachers = User.query.filter_by(
@@ -997,7 +1097,8 @@ def add_parametro():
         flash("Calificación añadida!", "message")
         flash("Parámetro añadido con éxito", "sucess")
         return redirect(url_for("add_parametro"))
-    return render_template("add_parametro.html")
+    parametros = ParametroCalificacion.query.all()
+    return render_template("add_parametro.html", parametros=parametros)
 
 
 @app.route("/verify_password", methods=["POST"])
@@ -1023,8 +1124,12 @@ def generate_student_report(student_id):
 
     # Configura estilos
     styles = getSampleStyleSheet()
-    title_style = ParagraphStyle("Title", parent=styles["Heading1"], alignment=1, spaceAfter=20)
-    subtitle_style = ParagraphStyle("Subtitle", parent=styles["Heading2"], alignment=1, spaceAfter=15)
+    title_style = ParagraphStyle(
+        "Title", parent=styles["Heading1"], alignment=1, spaceAfter=20
+    )
+    subtitle_style = ParagraphStyle(
+        "Subtitle", parent=styles["Heading2"], alignment=1, spaceAfter=15
+    )
     normal_style = styles["Normal"]
 
     # Genera el contenido
@@ -1038,21 +1143,57 @@ def generate_student_report(student_id):
     content.append(Paragraph("Parámetros de Calificación", subtitle_style))
     parametros = ParametroCalificacion.query.all()
     for param in parametros:
-        content.append(Paragraph(f"- {param.nombre} (Peso: {param.peso})", normal_style))
+        content.append(
+            Paragraph(f"- {param.nombre} (Peso: {param.peso})", normal_style)
+        )
     content.append(Spacer(1, 12))
 
     # Tabla de calificaciones del estudiante
-    data = [["Cohorte", "Docente", "Autoevaluación", "Administrador", "Nota Final", "Docente a Cargo"]]
+    data = [
+        [
+            "Cohorte",
+            "Docente",
+            "Autoevaluación",
+            "Administrador",
+            "Nota Final",
+            "Docente a Cargo",
+        ]
+    ]
     for grade in grades:
         cohort = Cohort.query.get(grade.cohort_id)
         teacher = cohort.teacher
 
-        final_grade = round(grade.final_grade, 2) if grade and grade.final_grade is not None else "N/A"
-        teacher_grade = round(grade.teacher_grade, 2) if grade and grade.teacher_grade is not None else "N/A"
-        self_evaluation = round(grade.self_evaluation, 2) if grade and grade.self_evaluation is not None else "N/A"
-        group_grade = round(grade.group_grade, 2) if grade and grade.group_grade is not None else "N/A"
+        final_grade = (
+            round(grade.final_grade, 2)
+            if grade and grade.final_grade is not None
+            else "N/A"
+        )
+        teacher_grade = (
+            round(grade.teacher_grade, 2)
+            if grade and grade.teacher_grade is not None
+            else "N/A"
+        )
+        self_evaluation = (
+            round(grade.self_evaluation, 2)
+            if grade and grade.self_evaluation is not None
+            else "N/A"
+        )
+        group_grade = (
+            round(grade.group_grade, 2)
+            if grade and grade.group_grade is not None
+            else "N/A"
+        )
 
-        data.append([cohort.name, teacher_grade, self_evaluation, group_grade, final_grade, teacher.full_name])
+        data.append(
+            [
+                cohort.name,
+                teacher_grade,
+                self_evaluation,
+                group_grade,
+                final_grade,
+                teacher.full_name,
+            ]
+        )
 
     table = Table(data)
     table_style = TableStyle(
@@ -1081,24 +1222,28 @@ def generate_student_report(student_id):
     response = make_response(pdf_data)
     response.headers["Content-Type"] = "application/pdf"
     response.headers["Content-Disposition"] = f"inline; filename={filename}"
-    log_activity(current_user, "Generó reporte individual",f"Estudiante: {student.full_name}")
+    log_activity(
+        current_user, "Generó reporte individual", f"Estudiante: {student.full_name}"
+    )
     return response
 
 
-
-
-
-@app.route("/generate_report/<int:teacher_id>/<int:year_id>/<int:cohort_id>", methods=["GET"])
+@app.route(
+    "/generate_report/<int:teacher_id>/<int:year_id>/<int:cohort_id>", methods=["GET"]
+)
 @login_required
 @admin_required
 def generate_report(teacher_id, year_id, cohort_id):
     teacher = User.query.get(teacher_id)
     year = Year.query.get(year_id)
     cohort = Cohort.query.get(cohort_id)
-    
+
     # Verificar que los objetos no sean None
     if not teacher or not year or not cohort:
-        return "Error: No se pudo encontrar el docente, año o cohorte especificado.", 400
+        return (
+            "Error: No se pudo encontrar el docente, año o cohorte especificado.",
+            400,
+        )
 
     parametros = ParametroCalificacion.query.all()
 
@@ -1131,8 +1276,12 @@ def generate_report(teacher_id, year_id, cohort_id):
 
     # Configura estilos
     styles = getSampleStyleSheet()
-    title_style = ParagraphStyle("Title", parent=styles["Heading1"], alignment=1, spaceAfter=20)
-    subtitle_style = ParagraphStyle("Subtitle", parent=styles["Heading2"], alignment=1, spaceAfter=15)
+    title_style = ParagraphStyle(
+        "Title", parent=styles["Heading1"], alignment=1, spaceAfter=20
+    )
+    subtitle_style = ParagraphStyle(
+        "Subtitle", parent=styles["Heading2"], alignment=1, spaceAfter=15
+    )
     normal_style = styles["Normal"]
 
     # Genera el contenido
@@ -1147,15 +1296,19 @@ def generate_report(teacher_id, year_id, cohort_id):
     # Tabla de estudiantes y calificaciones
     data = [["Identificación", "Estudiante", "Nota Final"]]
     for student_data in students_data:
-        data.append([
-            student_data["identificacion"], 
-            student_data["full_name"], 
-            round(student_data["final_grade"], 2) if student_data["final_grade"] is not None else "N/A"
-        ])
+        data.append(
+            [
+                student_data["identificacion"],
+                student_data["full_name"],
+                round(student_data["final_grade"], 2)
+                if student_data["final_grade"] is not None
+                else "N/A",
+            ]
+        )
 
     table = Table(data)
     table_style = TableStyle(
-         [
+        [
             ("BACKGROUND", (0, 0), (-1, 0), colors.skyblue),
             ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
             ("ALIGN", (0, 0), (-1, -1), "CENTER"),
@@ -1173,7 +1326,9 @@ def generate_report(teacher_id, year_id, cohort_id):
     # Parámetros de calificación
     content.append(Paragraph("Parámetros de Calificación:", subtitle_style))
     for param in parametros:
-        content.append(Paragraph(f"- {param.nombre} (Peso: {param.peso})", normal_style))
+        content.append(
+            Paragraph(f"- {param.nombre} (Peso: {param.peso})", normal_style)
+        )
     content.append(Spacer(1, 20))
 
     # Nota al pie
@@ -1186,10 +1341,8 @@ def generate_report(teacher_id, year_id, cohort_id):
     response = make_response(pdf_data)
     response.headers["Content-Type"] = "application/pdf"
     response.headers["Content-Disposition"] = f"inline; filename={filename}"
-    log_activity(current_user, "Generó reporte",f"{cohort.name} {cohort.year.name}")
+    log_activity(current_user, "Generó reporte", f"{cohort.name} {cohort.year.name}")
     return response
-
-
 
 
 @app.route("/logout")
