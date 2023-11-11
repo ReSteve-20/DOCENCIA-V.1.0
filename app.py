@@ -883,9 +883,7 @@ def create_rotacion():
             return redirect(url_for("create_rotacion"))
 
     cohorts = Cohort.query.all()
-    teachers = User.query.filter_by(
-        profile_id=2
-    ).all()  # Asumiendo que 2 es el ID de perfil de docente
+    teachers = User.query.filter(User.profile_id.in_([1, 2])).all()  # Asumiendo que 2 es el ID de perfil de docente
     return render_template("create_rotacion.html", cohorts=cohorts, teachers=teachers)
 
 

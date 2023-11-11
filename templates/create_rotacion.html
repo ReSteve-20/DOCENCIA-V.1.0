@@ -75,7 +75,7 @@
                 <select class="form-control" name="teacher_id" required>
                     <option value="0">--Seleccione--</option>
                     {% for teacher in teachers %}
-                    <option value="{{ teacher.id }}">{{ teacher.full_name }}</option>
+                    <option value="{{ teacher.id }}">{{ teacher.full_name }} - {{ teacher.especializacion.nombre }}</option>
                     {% endfor %}
                 </select>
             </div>
