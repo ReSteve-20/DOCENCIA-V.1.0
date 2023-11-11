@@ -517,21 +517,25 @@ def add_cohort():
     )  # Lista de años para que el usuario elija al crear un cohort
     return render_template("add_cohort.html", years=years)
 
-@app.route('/delete_cohort/<int:cohort_id>', methods=['POST'])
+
+@app.route("/delete_cohort/<int:cohort_id>", methods=["POST"])
 @admin_required
 @login_required
 def delete_cohort(cohort_id):
     cohort = Cohort.query.get_or_404(cohort_id)
     if cohort.students:  # Si hay estudiantes asociados al cohorte
-        flash('No puedes eliminar un cohorte que tiene estudiantes asociados.', 'danger')
-        return redirect(url_for('view_students_admin'))
+        flash(
+            "No puedes eliminar un cohorte que tiene estudiantes asociados.", "danger"
+        )
+        return redirect(url_for("view_students_admin"))
     else:
         # Asumiendo que no hay otras relaciones que dependan de Cohort, simplemente eliminamos el cohorte.
         # En caso de haber otras relaciones, asegúrate de manejarlas adecuadamente antes de eliminar el cohorte.
         db.session.delete(cohort)
         db.session.commit()
-        flash('Cohorte eliminado con éxito.', 'success')
-        return redirect(url_for('view_students_admin'))
+        flash("Cohorte eliminado con éxito.", "success")
+        return redirect(url_for("view_students_admin"))
+
 
 @app.route("/register_student", methods=["GET", "POST"])
 @admin_required
@@ -733,9 +737,9 @@ def view_students_admin():
         grades = Grade.query.filter_by(cohort_id=cohort_id).all()
         for grade in grades:
             # Check if all three grades are present
-            if grade.teacher_grade and grade.self_evaluation and grade.group_grade:
+            if grade.teacher_grade and grade.self_evaluation:
                 grade.final_grade = (
-                    grade.teacher_grade + grade.self_evaluation + grade.group_grade
+                    grade.teacher_grade + grade.teacher_grade + grade.self_evaluation
                 ) / 3
                 db.session.commit()  # Save the updated final_grade to database
 
@@ -745,7 +749,6 @@ def view_students_admin():
                 "identificacion": grade.student.identificacion,
                 "teacher_grade": grade.teacher_grade,
                 "self_evaluation": grade.self_evaluation,
-                "group_grade": grade.group_grade,
                 "final_grade": grade.final_grade,
             }
             students.append(student_data)
@@ -775,9 +778,9 @@ def view_students_teacher():
         # Obteniendo estudiantes y sus calificaciones para el cohorte seleccionado.
         grades = Grade.query.filter_by(cohort_id=cohort_id).all()
         for grade in grades:
-            if grade.teacher_grade and grade.self_evaluation and grade.group_grade:
+            if grade.teacher_grade and grade.self_evaluation:
                 grade.final_grade = (
-                    grade.teacher_grade + grade.self_evaluation + grade.group_grade
+                    grade.teacher_grade + grade.teacher_grade + grade.self_evaluation
                 ) / 3
                 db.session.commit()  # Save the updated final_grade to database
             student_data = {
@@ -786,7 +789,6 @@ def view_students_teacher():
                 "identificacion": grade.student.identificacion,
                 "teacher_grade": grade.teacher_grade,
                 "self_evaluation": grade.self_evaluation,
-                "group_grade": grade.group_grade,
                 "final_grade": grade.final_grade,
             }
             students.append(student_data)
@@ -816,10 +818,10 @@ def view_cohorts_student():
             if (
                 grade.teacher_grade is not None
                 and grade.self_evaluation is not None
-                and grade.group_grade is not None
+                
             ):
                 grade.final_grade = (
-                    grade.teacher_grade + grade.self_evaluation + grade.group_grade
+                    grade.teacher_grade + grade.teacher_grade + grade.self_evaluation 
                 ) / 3
                 db.session.commit()  # Save the updated final_grade to database
         grades.append(grade)
@@ -854,7 +856,7 @@ def create_rotacion():
             name=new_cohort_name, year_id=original_cohort.year_id
         ).first()
         if cohort_exist:
-            flash("Esta rotación ya existe", 'warning')
+            flash("Esta rotación ya existe", "warning")
             return redirect(url_for("create_rotacion"))
         else:
             new_cohort = Cohort(
@@ -1037,11 +1039,14 @@ def add_admin_grade(student_id, cohort_id):
     grade = Grade.query.filter_by(student_id=student_id, cohort_id=cohort_id).first()
 
     # Check if grade already exists and if the group_grade is already assigned
-    if grade and grade.group_grade is not None:
+    if grade and grade.teacher_grade is not None:
         flash("Ya has asignado una calificación para este estudiante.", "warning")
         return redirect(url_for("view_students_admin"))
 
     cohort = Cohort.query.get(cohort_id)  # Obtener el cohorte
+    if(cohort.teacher_id != current_user.id):
+        flash("No estás asignado para calificar a este curso.", "warning")
+        return redirect(url_for("view_students_admin"))
 
     if request.method == "POST":
         total = 0
@@ -1057,11 +1062,10 @@ def add_admin_grade(student_id, cohort_id):
         if not grade:
             grade = Grade(student_id=student_id, cohort_id=cohort_id)
 
-        grade.group_grade = final_grade
+        grade.teacher_grade = final_grade
 
         # Check if the logged-in admin is also the teacher of the cohort
-        if current_user.id == cohort.teacher_id:
-            grade.teacher_grade = final_grade
+        
 
         db.session.add(grade)  # This line ensures the grade is added if it didn't exist
         flash("Calificaciones agregadas!.", "sucess")
@@ -1154,7 +1158,6 @@ def generate_student_report(student_id):
             "Cohorte",
             "Docente",
             "Autoevaluación",
-            "Administrador",
             "Nota Final",
             "Docente a Cargo",
         ]
@@ -1178,18 +1181,13 @@ def generate_student_report(student_id):
             if grade and grade.self_evaluation is not None
             else "N/A"
         )
-        group_grade = (
-            round(grade.group_grade, 2)
-            if grade and grade.group_grade is not None
-            else "N/A"
-        )
+        
 
         data.append(
             [
                 cohort.name,
                 teacher_grade,
                 self_evaluation,
-                group_grade,
                 final_grade,
                 teacher.full_name,
             ]
@@ -1251,21 +1249,15 @@ def generate_report(teacher_id, year_id, cohort_id):
     students_data = []
     grades = Grade.query.filter_by(cohort_id=cohort_id).all()
     for grade in grades:
-        # Check if all three grades are present
-        if grade.teacher_grade and grade.self_evaluation and grade.group_grade:
-            grade.final_grade = (
-                grade.teacher_grade + grade.self_evaluation + grade.group_grade
-            ) / 3
-            db.session.commit()  # Save the updated final_grade to database
-
         student_data = {
-            "id": grade.student.id,
             "full_name": grade.student.full_name,
-            "identificacion": grade.student.identificacion,
-            "teacher_grade": grade.teacher_grade,
-            "self_evaluation": grade.self_evaluation,
-            "group_grade": grade.group_grade,
-            "final_grade": grade.final_grade,
+            "teacher_grade": grade.teacher_grade if grade.teacher_grade else "N/A",
+            "self_evaluation": grade.self_evaluation
+            if grade.self_evaluation
+            else "N/A",
+            "final_grade": round(grade.final_grade, 2) if grade.final_grade else "N/A",
+            "cohort_name": cohort.name,
+            "teacher_full_name": teacher.full_name,
         }
         students_data.append(student_data)
 
@@ -1293,16 +1285,53 @@ def generate_report(teacher_id, year_id, cohort_id):
     content.append(Paragraph(f"Docente a cargo: {teacher.full_name}", subtitle_style))
     content.append(Spacer(1, 12))
 
+    # Subtítulo: Parámetros de Calificación
+    content.append(Paragraph("Parámetros de Calificación", subtitle_style))
+    for param in parametros:
+        content.append(
+            Paragraph(f"- {param.nombre}", normal_style)
+        )
+    content.append(Spacer(1, 20))
+
     # Tabla de estudiantes y calificaciones
-    data = [["Identificación", "Estudiante", "Nota Final"]]
-    for student_data in students_data:
+    data = [
+        [
+            "Estudiante",
+            "Cohorte",
+            "Docente",
+            "Autoevaluación",
+            "Nota Final",
+            "Docente a Cargo",
+        ]
+    ]
+
+    for student in students_data:
+        # Asegúrate de redondear las calificaciones si no son 'N/A'
+        teacher_grade = (
+            round(student["teacher_grade"], 2)
+            if student["teacher_grade"] != "N/A"
+            else "N/A"
+        )
+        self_evaluation = (
+            round(student["self_evaluation"], 2)
+            if student["self_evaluation"] != "N/A"
+            else "N/A"
+        )
+        
+        final_grade = (
+            round(student["final_grade"], 2)
+            if student["final_grade"] != "N/A"
+            else "N/A"
+        )
+
         data.append(
             [
-                student_data["identificacion"],
-                student_data["full_name"],
-                round(student_data["final_grade"], 2)
-                if student_data["final_grade"] is not None
-                else "N/A",
+                student["full_name"],
+                student["cohort_name"],
+                teacher_grade,
+                self_evaluation,
+                final_grade,
+                student["teacher_full_name"],
             ]
         )
 
@@ -1321,27 +1350,20 @@ def generate_report(teacher_id, year_id, cohort_id):
     )
     table.setStyle(table_style)
     content.append(table)
-    content.append(Spacer(1, 20))
-
-    # Parámetros de calificación
-    content.append(Paragraph("Parámetros de Calificación:", subtitle_style))
-    for param in parametros:
-        content.append(
-            Paragraph(f"- {param.nombre} (Peso: {param.peso})", normal_style)
-        )
-    content.append(Spacer(1, 20))
 
     # Nota al pie
     nota = "Las calificaciones presentadas en este reporte son el resultado de una evaluación basada en los parámetros mencionados anteriormente."
+    content.append(Spacer(1, 20))
     content.append(Paragraph(nota, normal_style))
 
+    # Construye el documento
     doc.build(content)
     pdf_data = buffer.getvalue()
 
     response = make_response(pdf_data)
     response.headers["Content-Type"] = "application/pdf"
     response.headers["Content-Disposition"] = f"inline; filename={filename}"
-    log_activity(current_user, "Generó reporte", f"{cohort.name} {cohort.year.name}")
+    log_activity(current_user, "Generó reporte", f"{cohort.name} {year.name}")
     return response
 
 

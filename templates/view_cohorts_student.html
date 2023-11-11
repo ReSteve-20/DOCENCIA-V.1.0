@@ -107,7 +107,6 @@
                                 <th>Docente</th>
                                 <th>Nota Docente</th>
                                 <th>Autoevaluación</th>
-                                <th>Administrador</th>
                                 <th>Nota Final</th>
                                 <th>Autoevaluación</th>
                             </tr>
@@ -121,8 +120,7 @@
                                     "N/A" }}</td>
                                 <td>{{ grade.self_evaluation|round(2) if grade and grade.self_evaluation is not none
                                     else "N/A" }}</td>
-                                <td>{{ grade.group_grade|round(2) if grade and grade.group_grade is not none else "N/A"
-                                    }}</td>
+                               
                                 <td>{{ grade.final_grade|round(2) if grade and grade.final_grade is not none else "N/A"
                                     }}</td>
                                 <td><a href="{{ url_for('student_self_grade', student_id=current_user.id, cohort_id=cohort.id) }}"

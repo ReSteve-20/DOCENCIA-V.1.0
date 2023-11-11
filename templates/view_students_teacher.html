@@ -155,7 +155,6 @@
                     <th>Identificacion</th>
                     <th>Docente</th>
                     <th>Autoevaluación</th>
-                    <th>Administrador</th>
                     <th>Calificacion Final</th>
                     <th>Opciones</th>
                 </tr>
@@ -167,7 +166,7 @@
                     <td>{{ student.identificacion }}</td>
                     <td>{{ student.teacher_grade|round(2) if student.teacher_grade is not none else 'N/A' }}</td>
                     <td>{{ student.self_evaluation|round(2) if student.self_evaluation is not none else 'N/A' }}</td>
-                    <td>{{ student.group_grade|round(2) if student.group_grade is not none else 'N/A' }}</td>
+                    
                     <td>{{ student.final_grade }}</td>
                     <td>
                         <a href="{{ url_for('add_teacher_grade', student_id=student.id, cohort_id=selected_cohort.id) }}" class="btn btn-custom btn-sm">Calificar</a>

@@ -196,7 +196,7 @@ class Grade(BaseModel):
     id = db.Column(db.Integer, primary_key=True)
     teacher_grade = db.Column(db.Float)
     self_evaluation = db.Column(db.Float)
-    group_grade = db.Column(db.Float)
+    
     final_grade = db.Column(db.Float)
 
     # Foreign Keys

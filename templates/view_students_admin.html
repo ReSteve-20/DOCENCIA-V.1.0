@@ -184,7 +184,6 @@
                         <th>Identificacion</th>
                         <th>Docente</th>
                         <th>Estudiante</th>
-                        <th>Administrador</th>
                         <th>Calificación Final</th>
                         <th>Opciones</th>
                     </tr>
@@ -196,7 +195,6 @@
                         <td>{{ student.identificacion }}</td>
                         <td>{{ student.teacher_grade|round(2) if student.teacher_grade else 'N/A' }}</td>
                         <td>{{ student.self_evaluation|round(2) if student.self_evaluation else 'N/A' }}</td>
-                        <td>{{ student.group_grade|round(2) if student.group_grade else 'N/A' }}</td>
                         <td>{{ student.final_grade|round(2) if student.final_grade else 'N/A' }}</td>
 
                         <td class="acciones">
