@@ -899,7 +899,7 @@ def inactive_student(student_id):
 
     if (
         student.grades
-    ):  # Usando el atributo 'grades' para verificar si hay notas asociadas
+    ):  # Usando el atributo 'grade' para verificar si hay notas asociadas
         flash("No puedes inactivar a un estudiante con notas asociadas.", "danger")
         return redirect(url_for("view_students_admin"))
 
@@ -1154,6 +1154,8 @@ def generate_student_report(student_id):
     data = [
         [
             "Cohorte",
+            "Año",
+            "Especializacion",
             "Docente",
             "Autoevaluación",
             "Nota Final",
@@ -1184,6 +1186,8 @@ def generate_student_report(student_id):
         data.append(
             [
                 cohort.name,
+                cohort.year.name,
+                cohort.teacher.especializacion.nombre,
                 teacher_grade,
                 self_evaluation,
                 final_grade,
@@ -1278,7 +1282,7 @@ def generate_report(teacher_id, year_id, cohort_id):
     content = []
 
     # Título
-    title = f"Reporte Académico: {cohort.name} - {year.name}"
+    title = f"Reporte Académico: {cohort.name} - {year.name} - {cohort.teacher.especializacion.nombre}"
     content.append(Paragraph(title, title_style))
     content.append(Paragraph(f"Docente a cargo: {teacher.full_name}", subtitle_style))
     content.append(Spacer(1, 12))
