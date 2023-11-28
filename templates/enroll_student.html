@@ -115,7 +115,7 @@
 
             <select name="cohort_id">
                 {% for cohort in cohorts %}
-                <option value="{{ cohort.id }}">{{ cohort.name }} - {{ cohort.year.name }} - {{ cohort.teacher.especializacion.nombre }} - {{ cohort.teacher.full_name }}</option>
+                <option value="{{ cohort.id }}">{{ cohort.name }} - {{ cohort.year.name }}  - {{ cohort.teacher.full_name }}</option>
                 {% endfor %}
             </select>
 

@@ -81,8 +81,8 @@
             </div>
             <div class="mb-3" id="studentsContainer"></div>
             <div class="mb-3">
-                <label class="form-label" for="numero_rotacion">Número de Rotación:</label>
-                <input class="form-control" type="number" name="numero_rotacion" required>
+                <label class="form-label" for="numero_rotacion">Nombre:</label>
+                <input class="form-control" type="text" name="numero_rotacion" value="" required>
             </div>
             <button class="btn-custom" type="submit">Crear Rotación</button><br>
             <a href="{{url_for('admin_dashboard')}}">Atrás</a>
@@ -97,6 +97,17 @@
                 $('#studentsContainer').html(data);
             });
         });
+
+        $('#cohortSelect').change(function () {
+    var selectedCohortText = $("#cohortSelect option:selected").text();
+    var parts = selectedCohortText.split(" - ");
+    var cohortName = parts.slice(1).join(" - "); // Elimina la primera parte y une el resto
+    $('input[name="numero_rotacion"]').val(cohortName);
+});
+
+
+
+
     </script>
 </body>
 

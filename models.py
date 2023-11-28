@@ -175,8 +175,6 @@ class Rotacion(BaseModel):
         return f"<Rotacion {self.numero_rotacion} del Cohort {self.cohort_id}>"
 
 
-    
-
     def __repr__(self):
         return f"<Cohort {self.name}>"
 

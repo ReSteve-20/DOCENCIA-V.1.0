@@ -86,12 +86,12 @@ def send_verification_code(destinatario, pin):
         print(f"Error al enviar el correo: {e}")
         flash(f"GUARDA ESTE PIN EN UN LUGAR SEGURO {pin}", "info")
 
-
+#obtener hora colombiana
 def current_time_in_bogota():
     local_tz = pytz.timezone("America/Bogota")
     return datetime.now(local_tz)
 
-
+#Captura de actividad en la web
 def log_activity(user, activity_type, details=None):
     log = ActivityLog(user_id=user.id, activity_type=activity_type, details=details)
     db.session.add(log)
@@ -102,7 +102,7 @@ def log_activity(user, activity_type, details=None):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-
+#Permisos de administrador
 def admin_required(f):
     @wraps(f)
     def wrap(*args, **kwargs):
@@ -117,7 +117,7 @@ def admin_required(f):
 
     return wrap
 
-
+#Inicio de sesion
 @app.route("/", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -168,7 +168,7 @@ def teacher_dashboard():
     # Lógica para la vista del panel de docente
     return render_template("teacher_dashboard.html", user=current_user)
 
-
+#Agregar una nueva universidad
 @app.route("/add_universidad", methods=["GET", "POST"])
 @admin_required
 @login_required
@@ -191,7 +191,7 @@ def add_universidad():
             return redirect(url_for("admin_dashboard"))
     return render_template("add_universidad.html")
 
-
+#Agregar una especializacion
 @admin_required
 @login_required
 @app.route("/add_especializacion", methods=["POST", "GET"])
@@ -220,7 +220,7 @@ def add_especializacion():
 
     return render_template("add_especializacion.html")
 
-
+#Registrar un docente
 @app.route("/register", methods=["GET", "POST"])
 @admin_required
 @login_required
@@ -299,7 +299,7 @@ def register():
     especializaciones = Especializacion.query.all()
     return render_template("register.html", especializaciones=especializaciones)
 
-
+#Gestión de docentes
 @app.route("/admin/docentes", methods=["GET", "POST"])
 @login_required
 @admin_required  # Asumiendo que ya existe un decorador para verificar si el usuario es administrador.
@@ -331,7 +331,7 @@ def manage_teachers():
     teachers = User.query.filter_by(profile_id=ID_DOCENTE_NORMAL).all()
     return render_template("manage_teachers.html", teachers=teachers)
 
-
+#gestion de estudiantes
 @app.route("/admin/estudiantes", methods=["GET", "POST"])
 @login_required
 @admin_required  # Asumiendo que ya existe un decorador para verificar si el usuario es administrador.
@@ -363,7 +363,7 @@ def manage_students():
     students = User.query.filter_by(profile_id=ID_ESTUDIANTE_NORMAL).all()
     return render_template("manage_students.html", students=students)
 
-
+#Editar datos del docente
 @app.route("/admin/edit_teacher/<int:teacher_id>", methods=["GET", "POST"])
 @admin_required
 def edit_teacher(teacher_id):
@@ -391,7 +391,7 @@ def edit_teacher(teacher_id):
 
     return render_template("edit_teacher.html", teacher=teacher)
 
-
+#CAmbiar contraseña
 @app.route("/change_password", methods=["GET", "POST"])
 @login_required
 def change_password():
@@ -424,7 +424,7 @@ def change_password():
 
     return render_template("change_password.html")
 
-
+#Reestablecer contraseñs
 @app.route("/reset_password", methods=["GET", "POST"])
 def reset_password():
     if request.method == "POST":
@@ -454,7 +454,7 @@ def reset_password():
 
     return render_template("reset_password.html")
 
-
+#Activar año
 @app.route("/add_year", methods=["GET", "POST"])
 @login_required
 @admin_required
@@ -479,7 +479,7 @@ def add_year():
 
     return render_template("add_year.html")
 
-
+#Crear nuevo cohorte
 @app.route("/add_cohort", methods=["GET", "POST"])
 @login_required
 @admin_required
@@ -517,7 +517,7 @@ def add_cohort():
     )  # Lista de años para que el usuario elija al crear un cohort
     return render_template("add_cohort.html", years=years)
 
-
+#Eliminar un cohorte
 @app.route("/delete_cohort/<int:cohort_id>", methods=["POST"])
 @admin_required
 @login_required
@@ -533,10 +533,15 @@ def delete_cohort(cohort_id):
         # En caso de haber otras relaciones, asegúrate de manejarlas adecuadamente antes de eliminar el cohorte.
         db.session.delete(cohort)
         db.session.commit()
+        log_activity(
+            current_user,
+            "Eliminación de cohorte",
+            f"Cohorte: {cohort.name}",
+        )
         flash("Cohorte eliminado con éxito.", "success")
         return redirect(url_for("view_students_admin"))
 
-
+#Registrar un estudiante
 @app.route("/register_student", methods=["GET", "POST"])
 @admin_required
 @login_required
@@ -615,7 +620,7 @@ def register_student():
     universidades = Universidad.query.all()
     return render_template("add_student.html", universidades=universidades)
 
-
+#Editar datos estudiante
 @app.route("/admin/edit_student/<int:student_id>", methods=["GET", "POST"])
 @admin_required
 @login_required
@@ -644,7 +649,7 @@ def edit_student(student_id):
 
     return render_template("edit_student.html", student=student)
 
-
+#Matricular estudiante en un cohorte
 @app.route("/enroll_student", methods=["GET", "POST"])
 @login_required
 @admin_required
@@ -679,7 +684,7 @@ def enroll_student():
     cohorts = Cohort.query.all()
     return render_template("enroll_student.html", students=students, cohorts=cohorts)
 
-
+#Desmatricular estudiante
 @app.route("/unenroll_student", methods=["POST"])
 @login_required
 @admin_required
@@ -720,7 +725,7 @@ def unenroll_student():
 
     return redirect(url_for("admin_dashboard"))
 
-
+#Vista de estudiantes desde el administrador
 @app.route("/view_students_admin", methods=["GET", "POST"])
 @login_required
 @admin_required
@@ -762,7 +767,7 @@ def view_students_admin():
         teacher=teacher,
     )
 
-
+#Vista del estudiante desde el docente
 @app.route("/view_students_teacher", methods=["GET", "POST"])
 @login_required  # Asumiendo que ya existe un decorador para verificar si el usuario es administrador.
 def view_students_teacher():
@@ -800,7 +805,7 @@ def view_students_teacher():
         selected_cohort=selected_cohort,
     )
 
-
+#vista de calificaciones desde el estudiante
 @app.route("/view_cohorts_student", methods=["GET", "POST"])
 def view_cohorts_student():
     # Getting cohorts where the student is enrolled
@@ -815,13 +820,9 @@ def view_cohorts_student():
         # If the student has a grade entry for the cohort
         if grade:
             # Check if all three grades are present
-            if (
-                grade.teacher_grade is not None
-                and grade.self_evaluation is not None
-                
-            ):
+            if grade.teacher_grade is not None and grade.self_evaluation is not None:
                 grade.final_grade = (
-                    grade.teacher_grade + grade.teacher_grade + grade.self_evaluation 
+                    grade.teacher_grade + grade.teacher_grade + grade.self_evaluation
                 ) / 3
                 db.session.commit()  # Save the updated final_grade to database
         grades.append(grade)
@@ -829,14 +830,14 @@ def view_cohorts_student():
     combined_data = zip(student_cohorts, grades)
     return render_template("view_cohorts_student.html", combined_data=combined_data)
 
-
+#Obtiene los estudiantes de un cohorte especifico
 @app.route("/get_students_by_cohort/<int:cohort_id>")
 def get_students_by_cohort(cohort_id):
     cohort = Cohort.query.get(cohort_id)
     students = cohort.students  # Añade esta línea
     return render_template("students_list.html", students=students)
 
-
+#Crear rotaciones
 @app.route("/create_rotacion", methods=["GET", "POST"])
 @login_required
 @admin_required
@@ -845,13 +846,13 @@ def create_rotacion():
         original_cohort_id = request.form.get("cohort_id")
         teacher_id = request.form.get("teacher_id")
         selected_students_ids = request.form.getlist("students")
-        numero_rotacion = int(request.form.get("numero_rotacion"))
+        numero_rotacion = request.form.get("numero_rotacion")
 
         original_cohort = Cohort.query.get(original_cohort_id)
-        base_cohort_name = original_cohort.name.split(" R ")[0]
+        
 
         # Crear un nuevo cohorte basado en la rotación
-        new_cohort_name = f"{base_cohort_name} R {numero_rotacion}"
+        new_cohort_name = numero_rotacion
         cohort_exist = Cohort.query.filter_by(
             name=new_cohort_name, year_id=original_cohort.year_id
         ).first()
@@ -883,10 +884,12 @@ def create_rotacion():
             return redirect(url_for("create_rotacion"))
 
     cohorts = Cohort.query.all()
-    teachers = User.query.filter(User.profile_id.in_([1, 2])).all()  # Asumiendo que 2 es el ID de perfil de docente
+    teachers = User.query.filter(
+        User.profile_id.in_([1, 2])
+    ).all()  # Asumiendo que 2 es el ID de perfil de docente
     return render_template("create_rotacion.html", cohorts=cohorts, teachers=teachers)
 
-
+#Desactivar un estudiante
 @app.route("/inactive_student/<int:user_id>", methods=["POST"])
 @login_required
 def inactive_student(student_id):
@@ -918,7 +921,7 @@ def inactive_student(student_id):
 
     return redirect(url_for("view_students_admin"))
 
-
+#Autoevaluacion del estudiante
 @app.route(
     "/student_self_grade/<int:student_id>/<int:cohort_id>", methods=["GET", "POST"]
 )
@@ -974,7 +977,7 @@ def student_self_grade(student_id, cohort_id):
         "student_self_grade.html", student=student, cohort=cohort, parameters=parameters
     )
 
-
+#Nota del docente
 @app.route(
     "/add_teacher_grade/<int:student_id>/<int:cohort_id>", methods=["GET", "POST"]
 )
@@ -982,7 +985,7 @@ def student_self_grade(student_id, cohort_id):
 def add_teacher_grade(student_id, cohort_id):
     if (
         not current_user.is_normal
-    ):  # Asumiendo que los docentes tienen el perfil de "admin"
+    ):  # Asumiendo que los docentes tienen el perfil de administrador denominado "admin"
         flash("Solo los docentes pueden agregar esta calificación.", "danger")
         return redirect(url_for("teacher_dashboard"))
 
@@ -990,7 +993,7 @@ def add_teacher_grade(student_id, cohort_id):
     cohort = Cohort.query.get(cohort_id)
     parametros = ParametroCalificacion.query.all()
 
-    # Verificar si ya existe una calificación
+    # Verificar si ya existe una calificación asociada
     grade = Grade.query.filter_by(student_id=student_id, cohort_id=cohort_id).first()
     if grade and grade.teacher_grade:
         flash("Ya has asignado una calificación a este estudiante.", "warning")
@@ -1007,7 +1010,7 @@ def add_teacher_grade(student_id, cohort_id):
         final_grade = total / total_weight
 
         if not grade:
-            # Crear una nueva entrada Grade si no existe
+            # Crear una nueva entrada calificacion "Grade" si no existe
             grade = Grade(student_id=student_id, cohort_id=cohort_id)
             db.session.add(grade)
 
@@ -1026,7 +1029,7 @@ def add_teacher_grade(student_id, cohort_id):
         "add_teacher_grade.html", student=student, parametros=parametros, cohort=cohort
     )
 
-
+#nota del administrador si es docente especifico de algun cohorte
 @app.route("/add_admin_grade/<int:student_id>/<int:cohort_id>", methods=["GET", "POST"])
 @login_required
 @admin_required
@@ -1036,13 +1039,13 @@ def add_admin_grade(student_id, cohort_id):
 
     grade = Grade.query.filter_by(student_id=student_id, cohort_id=cohort_id).first()
 
-    # Check if grade already exists and if the group_grade is already assigned
+    # Verifica si ya existen calificaciones asignadas para el estudiante
     if grade and grade.teacher_grade is not None:
         flash("Ya has asignado una calificación para este estudiante.", "warning")
         return redirect(url_for("view_students_admin"))
 
     cohort = Cohort.query.get(cohort_id)  # Obtener el cohorte
-    if(cohort.teacher_id != current_user.id):
+    if cohort.teacher_id != current_user.id:
         flash("No estás asignado para calificar a este curso.", "warning")
         return redirect(url_for("view_students_admin"))
 
@@ -1056,14 +1059,13 @@ def add_admin_grade(student_id, cohort_id):
             total_weight += weight
         final_grade = total / total_weight
 
-        # If grade does not exist, initialize it
+        # Si las notas no existen, Inicializalas!!
         if not grade:
             grade = Grade(student_id=student_id, cohort_id=cohort_id)
 
         grade.teacher_grade = final_grade
 
         # Check if the logged-in admin is also the teacher of the cohort
-        
 
         db.session.add(grade)  # This line ensures the grade is added if it didn't exist
         flash("Calificaciones agregadas!.", "sucess")
@@ -1082,7 +1084,7 @@ def add_admin_grade(student_id, cohort_id):
     )
 
 
-@app.route("/add_parametro", methods=["GET", "POST"])
+# @app.route("/add_parametro", methods=["GET", "POST"]) 
 @login_required
 @admin_required
 def add_parametro():
@@ -1102,7 +1104,7 @@ def add_parametro():
     parametros = ParametroCalificacion.query.all()
     return render_template("add_parametro.html", parametros=parametros)
 
-
+#Verificar la contraseña 
 @app.route("/verify_password", methods=["POST"])
 @login_required
 def verify_password():
@@ -1111,7 +1113,7 @@ def verify_password():
         return jsonify(valid=True)
     return jsonify(valid=False)
 
-
+#Generar pdf de un estudiante
 @app.route("/generate_student_report/<int:student_id>", methods=["GET"])
 @login_required
 @admin_required
@@ -1181,7 +1183,6 @@ def generate_student_report(student_id):
             if grade and grade.self_evaluation is not None
             else "N/A"
         )
-        
 
         data.append(
             [
@@ -1227,7 +1228,7 @@ def generate_student_report(student_id):
     )
     return response
 
-
+#Generar pdf de un cohorte
 @app.route(
     "/generate_report/<int:teacher_id>/<int:year_id>/<int:cohort_id>", methods=["GET"]
 )
@@ -1282,17 +1283,20 @@ def generate_report(teacher_id, year_id, cohort_id):
     content = []
 
     # Título
-    title = f"Reporte Académico: {cohort.name} - {year.name} - {cohort.teacher.especializacion.nombre}"
+    title = f"Reporte Académico: {cohort.name} - {year.name} "
     content.append(Paragraph(title, title_style))
-    content.append(Paragraph(f"Docente a cargo: {teacher.full_name}", subtitle_style))
+    content.append(
+        Paragraph(
+            f"Docente a cargo: {teacher.full_name} - Especialista en {teacher.especializacion.nombre}",
+            subtitle_style,
+        )
+    )
     content.append(Spacer(1, 12))
 
     # Subtítulo: Parámetros de Calificación
     content.append(Paragraph("Parámetros de Calificación", subtitle_style))
     for param in parametros:
-        content.append(
-            Paragraph(f"- {param.nombre}", normal_style)
-        )
+        content.append(Paragraph(f"- {param.nombre}", normal_style))
     content.append(Spacer(1, 20))
 
     # Tabla de estudiantes y calificaciones
@@ -1319,7 +1323,7 @@ def generate_report(teacher_id, year_id, cohort_id):
             if student["self_evaluation"] != "N/A"
             else "N/A"
         )
-        
+
         final_grade = (
             round(student["final_grade"], 2)
             if student["final_grade"] != "N/A"
@@ -1368,7 +1372,7 @@ def generate_report(teacher_id, year_id, cohort_id):
     log_activity(current_user, "Generó reporte", f"{cohort.name} {year.name}")
     return response
 
-
+#Cerrar session
 @app.route("/logout")
 @login_required
 def logout():
@@ -1376,7 +1380,7 @@ def logout():
     logout_user()
     return redirect(url_for("login"))
 
-
+#Vista de logs
 @app.route("/view_logs", methods=["GET", "POST"])
 @admin_required  # Asumiendo que solo los administradores pueden ver los logs
 @login_required
@@ -1398,7 +1402,7 @@ def view_logs():
 
     return render_template("view_logs.html", logs=logs, teachers=teachers)
 
-
+#Crear database primera vez
 @app.route("/create_db")
 def create_db():
     db.create_all()
