@@ -79,11 +79,10 @@
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                             <!-- Opciones del combobox. Puedes agregar o quitar según tus necesidades -->
-                            <li><a class="dropdown-item" href="{{ url_for('register') }}">Registrar Docente</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('add_year') }}">Añadir año.</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('add_universidad') }}">Añadir universidad</a>
+                            <li><a class="dropdown-item" href="{{ url_for('manage_students') }}">Gestionar Estudiantes</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('manage_teachers') }}">Gestionar Docentes</a>
                             <li><a class="dropdown-item" href="{{ url_for('view_logs') }}">Ver Logs</a></li>
+
                         </ul>
                     </li>
                     <!-- Opción de Mi perfil -->
@@ -123,10 +122,10 @@
                     <input type="date" id="dateFilter" name="dateFilter" class="form-control">
                 </div>
                 <div class="col-md-4">
-                    <label for="teacherFilter">Filtrar por docente:</label>
+                    <label for="teacherFilter">Filtrar por usuario:</label>
                     
                     <select id="teacherFilter" name="teacherFilter" class="form-control">
-                        <option value="">Todos los docentes</option>
+                        <option value="">Todos los usuarios</option>
                         {% for teacher in teachers %}
                             <option value="{{ teacher.full_name }}">{{ teacher.full_name }}</option>
                         {% endfor %}

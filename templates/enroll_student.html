@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MATRÍCULAS</title>
@@ -45,6 +46,29 @@
             border-bottom: 2px solid #007bff;
         }
     </style>
+        <script>
+            // Se mueve la definición de la función al inicio para asegurar su disponibilidad
+            function initializeAwesomplete() {
+                var studentData = [
+                    {% for student in students %}
+                    { value: "{{ student.id }}", label: "{{ student.full_name }}" },
+                    {% endfor %}
+                ];
+    
+                var input = document.getElementById("studentAutocomplete");
+                if (input) {
+                    new Awesomplete(input, {
+                        list: studentData,
+                        minChars: 1,
+                        replace: function(suggestion) {
+                            this.input.value = suggestion.label;
+                            document.getElementById("studentIdHidden").value = suggestion.value;
+                        }
+                    });
+                }
+            }
+        </script>
+    
 </head>
 
 
@@ -127,25 +151,12 @@
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.min.js" async></script>
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            var studentData = [
-                
-                {% for student in students %}
-                { value: "{{ student.id }}", label: "{{ student.full_name }}" },
-                {% endfor %}
-            ];
-
-            var input = document.getElementById("studentAutocomplete");
-            var awesomplete = new Awesomplete(input, {
-                list: studentData,
-                minChars: 1,
-                replace: function(suggestion) {
-                    this.input.value = suggestion.label;
-                    document.getElementById("studentIdHidden").value = suggestion.value;
-                }
-            });
-        });
+        // Esperar a que la página esté completamente cargada antes de inicializar Awesomplete
+        window.onload = function() {
+            initializeAwesomplete();
+        };
     </script>
+    
 </body>
 
 </html>

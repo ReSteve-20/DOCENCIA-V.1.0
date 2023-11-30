@@ -166,7 +166,7 @@
 
         {% if selected_cohort %}
         <h2>Estudiantes: {{ selected_cohort.name }}</h2>
-        <h4> Docente: {{ selected_cohort.teacher.full_name }} - {{ selected_cohort.teacher.especializacion.nombre }}</h4>
+        <h4> Docente: {{ selected_cohort.teacher.full_name }} || Especialista en  {{ selected_cohort.teacher.especializacion.nombre }}</h4>
 
 
         <a href="{{ url_for('generate_report', teacher_id=teacher.id, year_id=selected_cohort.year.id, cohort_id=selected_cohort.id) }}"
